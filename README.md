@@ -11,7 +11,7 @@ It automatically sets some of the [HTTP span attributes](https://github.com/open
 based on the request and response data.
 
 Telepoison by itself is not particularly useful: it becomes useful when used in conjuction with a "server-side"
-opentelemetry-instrumented library, e.g. opentelemetry_plug.
+opentelemetry-instrumented library, e.g. [opentelemetry_plug](https://github.com/opentelemetry-beam/opentelemetry_plug).
 These do the opposite work: they take the trace context information from the request headers,
 and they create a [SERVER](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/api.md#spankind) span which becomes the currently active span.
 
@@ -31,6 +31,7 @@ span, and pass it to Telepoison when doing the HTTP client request.
 ## What's missing
 
 * Better default span name (use target hostname / path ?)
+* Set [SpanKind](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/api.md#spankind) to client
 * Support for explicit parent span
 * Support for user-provided span attributes
 * Support for fixed span attributes, either in `Teleposion.setup` or in config

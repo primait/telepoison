@@ -27,7 +27,11 @@ defmodule Telepoison do
     url
   end
 
-  def process_request_headers(headers) do
+  def process_request_headers(headers) when is_map(headers) do
+    Enum.into(headers, [])
+  end
+
+  def process_request_headers(headers) when is_list(headers) do
     :ot_propagation.http_inject(headers)
   end
 
