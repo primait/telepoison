@@ -21,16 +21,18 @@ through HTTP "jumps".
 ## Keep in mind
 
 * The [Erlang opentelemetry SDK](https://github.com/open-telemetry/opentelemetry-erlang) stores
-the currently active span in a `pdict`, a per-process dict.
-If Telepoison is called from a different process than the one that initially handled the request and created
-the "server-side" span, Telepoison won't find a parent span and will create a new root client span,
-losing the trace context.
-In this case, your only option to correctly propagate the trace context is to manually pass around the parent
-span, and pass it to Telepoison when doing the HTTP client request.
+  the currently active span in a `pdict`, a per-process dict.
+  If Telepoison is called from a different process than the one that initially handled the request and created
+  the "server-side" span, Telepoison won't find a parent span and will create a new root client span,
+  losing the trace context.
+  In this case, your only option to correctly propagate the trace context is to manually pass around the parent
+  span, and pass it to Telepoison when doing the HTTP client request.
+
+* If the request fails due to nxdomain, the `process_response_status_code` hook is not called and therefore
+  the span is not ended.
 
 ## What's missing
 
-* Better default span name (use target hostname / path ?)
 * Set [SpanKind](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/api.md#spankind) to client
 * Support for explicit parent span
 * Support for user-provided span attributes
