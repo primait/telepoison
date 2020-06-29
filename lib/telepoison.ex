@@ -24,7 +24,9 @@ defmodule Telepoison do
   end
 
   def process_request_headers(headers) when is_map(headers) do
-    Enum.into(headers, [])
+    headers
+    |> Enum.into([])
+    |> process_request_headers()
   end
 
   def process_request_headers(headers) when is_list(headers) do

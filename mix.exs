@@ -23,6 +23,9 @@ defmodule Telepoison.MixProject do
     [
       {:httpoison, "~> 1.6"},
       {:opentelemetry_api, "~> 0.3.1"},
+      {:opentelemetry, "~> 0.4.0", only: :test},
+      {:plug, "~> 1.10", only: :test},
+      {:plug_cowboy, "~> 2.2", only: :test}
     ]
   end
 end
