@@ -48,14 +48,13 @@ defmodule Telepoison do
     OpenTelemetry.Span.set_attribute("http.status_code", status_code)
     # TODO: transform http status in http client span status and set in span
     # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
-    OpenTelemetry.Tracer.current_span_ctx() |> IO.inspect()
     OpenTelemetry.Tracer.end_span()
     status_code
   end
 
   def compute_default_span_name(request) do
     method_str = request.method |> Atom.to_string |> String.upcase()
-    %URI{authority: authority} = request.url |> process_request_url() |> URI.parse() |> IO.inspect()
+    %URI{authority: authority} = request.url |> process_request_url() |> URI.parse()
     "#{method_str} #{authority}"
   end
 
