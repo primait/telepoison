@@ -39,7 +39,7 @@ defmodule Telepoison do
     attributes = [
       {"http.method", request.method},
       {"http.url", request.url}
-    ]
+    ] ++ Keyword.get(opts, :ot_attributes, [])
 
     OpenTelemetry.Tracer.start_span(span_name, %{attributes: attributes})
 

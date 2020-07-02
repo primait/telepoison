@@ -35,6 +35,5 @@ through HTTP "jumps".
 
 * Set [SpanKind](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/api.md#spankind) to client
 * Support for explicit parent span
-* Support for user-provided span attributes
 * Support for fixed span attributes, either in `Teleposion.setup` or in config
 * A lot of other stuff..
