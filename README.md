@@ -2,6 +2,35 @@
 
 Telepoison is a [opentelemetry-instrumented](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/glossary.md#instrumented-library) wrapper around HTTPPoison.
 
+## Usage
+
+Simply replace `HTTPoison` with `Telepoison` when calling one of the request methods (get(), get!(), post(), request(), etc.)
+
+```elixir
+# before
+HTTPoison.get!(url, headers, opts)
+
+# after
+Telepoison.get!(url, headers, opts)
+```
+
+Additionally, telepoison adds some options that can be passed in the `opts` HTTPoison argument to set OpenTelemetry-related stuff.
+These start with `:ot_`
+
+* `:ot_span_name` sets the span name
+* `:ot_attributes` additional span attributes that will be added to the span. Should be a list of {name, value} tuples.
+
+
+Example:
+```elixir
+Telepoison.get!(
+  "en.wikipedia.org",
+  [],
+  ot_span_name: "fetch wikipedia homepage",
+  ot_attributes: [{"wikipedia.language", "en"}]
+)
+```
+
 ## How it works
 
 Telepoison, when executing an HTTP request to an external service, creates an OpenTelemetry span, injects
