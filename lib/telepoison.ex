@@ -19,7 +19,7 @@ defmodule Telepoison do
 
   You should call this method on your application startup, before Telepoison is used.
   """
-  def setup() do
+  def setup do
     OpenTelemetry.register_application_tracer(:telepoison)
   end
 
