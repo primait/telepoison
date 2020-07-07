@@ -25,7 +25,9 @@ defmodule Telepoison.MixProject do
       {:opentelemetry_api, "~> 0.3.1"},
       {:opentelemetry, "~> 0.4.0", only: :test},
       {:plug, "~> 1.10", only: :test},
-      {:plug_cowboy, "~> 2.2", only: :test}
+      {:plug_cowboy, "~> 2.2", only: :test},
+      {:credo, "~> 1.4", only: [:dev, :test]},
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false}
     ]
   end
 end
