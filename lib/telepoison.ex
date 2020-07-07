@@ -34,12 +34,14 @@ defmodule Telepoison do
   end
 
   def request(%Request{options: opts} = request) do
-    span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
+    span_name =
+      Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
 
-    attributes = [
-      {"http.method", request.method},
-      {"http.url", request.url}
-    ] ++ Keyword.get(opts, :ot_attributes, [])
+    attributes =
+      [
+        {"http.method", request.method},
+        {"http.url", request.url}
+      ] ++ Keyword.get(opts, :ot_attributes, [])
 
     OpenTelemetry.Tracer.start_span(span_name, %{attributes: attributes})
 
@@ -55,9 +57,8 @@ defmodule Telepoison do
   end
 
   def compute_default_span_name(request) do
-    method_str = request.method |> Atom.to_string |> String.upcase()
+    method_str = request.method |> Atom.to_string() |> String.upcase()
     %URI{authority: authority} = request.url |> process_request_url() |> URI.parse()
     "#{method_str} #{authority}"
   end
-
 end
