@@ -58,7 +58,7 @@ defmodule TelepoisonTest do
     assert {"app.callname", "mariorossi"} in attributes
   end
 
-  defp flush_mailbox() do
+  defp flush_mailbox do
     receive do
       _ -> flush_mailbox()
     after
