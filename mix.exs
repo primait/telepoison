@@ -7,7 +7,9 @@ defmodule Telepoison.MixProject do
       version: "0.1.1",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      package: package(),
+      description: description()
     ]
   end
 
@@ -29,5 +31,18 @@ defmodule Telepoison.MixProject do
       {:credo, "~> 1.4", only: [:dev, :test]},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false}
     ]
+  end
+
+  def package do
+    [
+      name: "telepoison",
+      maintainers: ["Leonardo Donelli"],
+      licenses: ["MIT"],
+      links: %{"Github" => "https://github.com/primait/telepoison"}
+    ]
+  end
+
+  def description do
+    "Telepoison is a opentelemetry-instrumented wrapper around HTTPPoison."
   end
 end
