@@ -34,8 +34,7 @@ defmodule Telepoison do
   end
 
   def request(%Request{options: opts} = request) do
-    span_name =
-      Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
+    span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
 
     attributes =
       [

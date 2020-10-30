@@ -9,7 +9,8 @@ defmodule Telepoison.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: package(),
-      description: description()
+      description: description(),
+      aliases: aliases()
     ]
   end
 
@@ -40,6 +41,14 @@ defmodule Telepoison.MixProject do
       maintainers: ["Leonardo Donelli"],
       licenses: ["MIT"],
       links: %{"Github" => "https://github.com/primait/telepoison"}
+    ]
+  end
+
+  defp aliases do
+    [
+      "format.all": [
+        "format mix.exs \"lib/**/*.{ex,exs}\" \"test/**/*.{ex,exs}\" \"priv/**/*.{ex,exs}\" \"config/**/*.{ex,exs}\""
+      ]
     ]
   end
 
