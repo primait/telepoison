@@ -1,0 +1,39 @@
+version: '2'
+services:
+  web:
+    build: .
+    volumes:
+      - .:/code
+      - "~/.ssh:/home/app/.ssh"
+      - "~/.aws:/home/app/.aws"
+      - "~/.gitconfig:/home/app/.gitconfig"
+    working_dir: /code
+    links:
+      - rabbit
+      - mysql
+      - statsd
+    command: "/code/docker/startup.sh"
+
+  rabbit:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_VHOST: vlad
+      RABBITMQ_DEFAULT_USER: vlad
+      RABBITMQ_DEFAULT_PASS: vlad
+    ports:
+      - "15679:15672"
+
+  mysql:
+    image: mysql:5.7
+    ports:
+      - 23306:3306
+    environment:
+      MYSQL_DATABASE: vlad
+      MYSQL_USER: vlad
+      MYSQL_PASSWORD: vlad
+      MYSQL_ROOT_PASSWORD: vlad_root
+
+  statsd:
+    image: mendhak/udp-listener:latest
+    environment:
+      UDPPORT: 8125
