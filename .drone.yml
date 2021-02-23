@@ -231,41 +231,6 @@ trigger:
 
 ---
 kind: pipeline
-name: wait-for-artifact
-
-platform:
-  os: linux
-  arch: amd64
-
-steps:
-- name: wait-for-artifact
-  image: public.ecr.aws/prima/drone-tools:1.20.1
-  commands:
-  - . /etc/profile.d/ecs-credentials-endpoint
-  - ./deploy/deploy-it production --wait-for-artifact
-  volumes:
-  - name: ecs
-    path: /etc/profile.d/ecs-credentials-endpoint
-
-volumes:
-- name: docker
-  host:
-    path: /var/run/docker.sock
-- name: ecs
-  host:
-    path: /etc/profile.d/ecs-credentials-endpoint
-- name: docker-conf
-  host:
-    path: /home/ec2-user/.docker
-
-trigger:
-  event:
-  - promote
-  target:
-  - deploy-it-production
-
----
-kind: pipeline
 name: deploy-it-production
 
 platform:
@@ -370,6 +335,6 @@ depends_on:
 
 ---
 kind: signature
-hmac: 3c0038ddd4704971265f3faa98bf6f6ecffdf93648b7e9eb094a94db8d7aa58a
+hmac: 2a32854bdbcedacc02d92f07d1eee621d868c378bb987ac280aabd2c9d37a50f
 
 ...
