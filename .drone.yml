@@ -11,26 +11,17 @@ clone:
 
 steps:
 - name: git-clone
-  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-git:1.3-3
+  image: public.ecr.aws/prima/drone-git:1.3-3
   environment:
     PLUGIN_DEPTH: 5
 
-- name: pre-start
-  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
-  commands:
-  - pre-start-scripts
-  environment:
-    COUNTRY: it
-  depends_on:
-  - git-clone
-
 - name: cache-restore
-  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
+  image: public.ecr.aws/prima/drone-tools:1.20.1
   commands:
   - . /etc/profile.d/ecs-credentials-endpoint
   - cache-restore
   environment:
-    COUNTRY: it
+    BUCKET_NAME: prima-ci-cache
   volumes:
   - name: ecs
     path: /etc/profile.d/ecs-credentials-endpoint
@@ -42,7 +33,7 @@ steps:
   - git-clone
 
 - name: check-secrets
-  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
+  image: public.ecr.aws/prima/drone-tools:1.20.1
   commands:
   - . /etc/profile.d/ecs-credentials-endpoint
   - check-secrets-grants
@@ -52,11 +43,18 @@ steps:
   depends_on:
   - git-clone
 
+- name: check-public-docker-images
+  image: public.ecr.aws/prima/drone-tools:1.20.1
+  commands:
+  - check-public-docker-images
+  depends_on:
+  - git-clone
+
 - name: build-image
-  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
+  image: public.ecr.aws/prima/drone-tools:1.20.1
   commands:
   - sed -i 's/USER app/USER root/g' ./Dockerfile
-  - docker build -t prima/telepoison-ci:1 ./
+  - docker build -t prima/telepoison-ci:${DRONE_COMMIT} ./
   volumes:
   - name: docker
     path: /var/run/docker.sock
@@ -66,15 +64,14 @@ steps:
   - cache-restore
 
 - name: elixir-dependencies
-  image: prima/telepoison-ci:1
+  image: prima/telepoison-ci:${DRONE_COMMIT}
   commands:
   - mix deps.get
   depends_on:
-  - pre-start
   - build-image
 
 - name: elixir-compile
-  image: prima/telepoison-ci:1
+  image: prima/telepoison-ci:${DRONE_COMMIT}
   commands:
   - mix compile --all-warnings --warnings-as-errors --ignore-module-conflict --debug-info
   environment:
@@ -83,7 +80,7 @@ steps:
   - elixir-dependencies
 
 - name: elixir-format
-  image: prima/telepoison-ci:1
+  image: prima/telepoison-ci:${DRONE_COMMIT}
   commands:
   - mix format --check-formatted
   environment:
@@ -92,7 +89,7 @@ steps:
   - elixir-compile
 
 - name: elixir-test
-  image: prima/telepoison-ci:1
+  image: prima/telepoison-ci:${DRONE_COMMIT}
   commands:
   - mix test
   environment:
@@ -101,7 +98,7 @@ steps:
   - elixir-compile
 
 - name: elixir-credo
-  image: prima/telepoison-ci:1
+  image: prima/telepoison-ci:${DRONE_COMMIT}
   commands:
   - mix credo -a --strict
   environment:
@@ -110,7 +107,7 @@ steps:
   - elixir-compile
 
 - name: elixir-dialyzer
-  image: prima/telepoison-ci:1
+  image: prima/telepoison-ci:${DRONE_COMMIT}
   commands:
   - mix dialyzer
   environment:
@@ -119,12 +116,12 @@ steps:
   - elixir-compile
 
 - name: cache-save
-  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
+  image: public.ecr.aws/prima/drone-tools:1.20.1
   commands:
   - . /etc/profile.d/ecs-credentials-endpoint
   - cache-save _build deps
   environment:
-    COUNTRY: it
+    BUCKET_NAME: prima-ci-cache
   volumes:
   - name: ecs
     path: /etc/profile.d/ecs-credentials-endpoint
@@ -159,106 +156,6 @@ trigger:
 
 ---
 kind: pipeline
-name: deploy
-
-platform:
-  os: linux
-  arch: amd64
-
-clone:
-  disable: true
-
-steps:
-- name: git-clone
-  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-git:1.3-3
-  environment:
-    PLUGIN_DEPTH: 5
-
-- name: pre-start
-  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
-  commands:
-  - pre-start-scripts
-  environment:
-    COUNTRY: it
-  depends_on:
-  - git-clone
-
-- name: cache-restore
-  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
-  commands:
-  - . /etc/profile.d/ecs-credentials-endpoint
-  - cache-restore
-  environment:
-    COUNTRY: it
-  volumes:
-  - name: ecs
-    path: /etc/profile.d/ecs-credentials-endpoint
-  - name: docker
-    path: /var/run/docker.sock
-  - name: docker-conf
-    path: /root/.docker
-  depends_on:
-  - git-clone
-
-- name: check-secrets
-  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
-  commands:
-  - . /etc/profile.d/ecs-credentials-endpoint
-  - check-secrets-grants
-  volumes:
-  - name: ecs
-    path: /etc/profile.d/ecs-credentials-endpoint
-  depends_on:
-  - git-clone
-
-- name: build-image
-  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
-  commands:
-  - sed -i 's/USER app/USER root/g' ./Dockerfile
-  - docker build -t prima/telepoison-ci:1 ./
-  volumes:
-  - name: docker
-    path: /var/run/docker.sock
-  - name: docker-conf
-    path: /root/.docker
-  depends_on:
-  - cache-restore
-
-- name: deploy-production
-  image: prima/telepoison-ci:1
-  commands:
-  - . /etc/profile.d/ecs-credentials-endpoint
-  - ./deploy/deploy production ${DRONE_TAG}
-  environment:
-    HEX_AUTH_KEY:
-      from_secret: hex_auth_key
-    MIX_ENV: dev
-  volumes:
-  - name: ecs
-    path: /etc/profile.d/ecs-credentials-endpoint
-  depends_on:
-  - check-secrets
-  - build-image
-
-volumes:
-- name: docker
-  host:
-    path: /var/run/docker.sock
-- name: ecs
-  host:
-    path: /etc/profile.d/ecs-credentials-endpoint
-- name: docker-conf
-  host:
-    path: /home/ec2-user/.docker
-
-trigger:
-  event:
-  - tag
-  ref:
-  - refs/tags/*.*.*
-
----
-kind: pipeline
 name: email-failure
 
 platform:
@@ -270,7 +167,7 @@ clone:
 
 steps:
 - name: email-failure
-  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-email
+  image: public.ecr.aws/prima/drone-email
   settings:
     from: noreply@prima.it
     host: email-smtp.eu-west-1.amazonaws.com
@@ -281,45 +178,18 @@ steps:
       from_secret: email_username
 
 trigger:
-  event:
-  - push
   status:
   - failure
+  target:
+    exclude:
+    - qa
+    - qa-stack
 
 depends_on:
 - default
 
 ---
-kind: pipeline
-name: notify-captainhook-production
-
-platform:
-  os: linux
-  arch: amd64
-
-clone:
-  disable: true
-
-steps:
-- name: send
-  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-webhook
-  settings:
-    signature-secret:
-      from_secret: captainhook_secret
-    urls: http://captainhook-internal.prima.it/drone/deploy
-
-trigger:
-  event:
-  - tag
-  status:
-  - success
-  - failure
-
-depends_on:
-- deploy
-
----
 kind: signature
-hmac: afce25281056985b9c0888d0bc942c9ce4a9c32e01e81e4f63c0bdbd5d0a641c
+hmac: 7d9b6a3889f298a425a0889f0642266ccc8cf9d55f47c3617f6df8616179abe6
 
 ...
