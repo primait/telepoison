@@ -26,4 +26,3 @@ export VERSION="${DRONE_TAG:-$DRONE_COMMIT_SHA}"
 
 mix deps.get
 mix compile
-aws --region="eu-west-1" s3 cp "${VERSION}"-"${ENV}".tar.gz s3://prima-artifacts-encrypted/microservices/telepoison/"${VERSION}"-"${ENV}".tar.gz
