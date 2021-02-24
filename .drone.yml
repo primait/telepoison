@@ -294,9 +294,6 @@ trigger:
   target:
   - deploy-it-production
 
-depends_on:
-- wait-for-artifact
-
 ---
 kind: pipeline
 name: email-failure
@@ -335,6 +332,6 @@ depends_on:
 
 ---
 kind: signature
-hmac: 2a32854bdbcedacc02d92f07d1eee621d868c378bb987ac280aabd2c9d37a50f
+hmac: fae28bbb9c38525101c15f4c32e1373488a4053ecbe84c4a2238c6f119f79d5a
 
 ...
