@@ -6,7 +6,9 @@ defmodule TelepoisonTest do
   require Record
   require OpenTelemetry.Tracer
 
-  for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/ot_span.hrl") do
+  alias OpenTelemetry.Tracer
+
+  for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
     Record.defrecord(name, spec)
   end
 
@@ -16,7 +18,8 @@ defmodule TelepoisonTest do
   end
 
   setup do
-    :ot_batch_processor.set_exporter(:ot_exporter_pid, self())
+    :otel_batch_processor.set_exporter(:otel_exporter_pid, self())
+
     flush_mailbox()
     :ok
   end
@@ -30,32 +33,42 @@ defmodule TelepoisonTest do
              attributes |> Enum.map(&elem(&1, 0)) |> Enum.sort()
   end
 
+  @tag foo: true
   test "traceparent header is injected when no headers" do
-    %HTTPoison.Response{request: %{headers: headers}} = Telepoison.get!("http://localhost:8000")
-    assert "traceparent" in Enum.map(headers, &elem(&1, 0))
+    OpenTelemetry.Tracer.with_span :span_1 do
+      %HTTPoison.Response{request: %{headers: headers}} = Telepoison.get!("http://localhost:8000")
+      assert "traceparent" in Enum.map(headers, &elem(&1, 0))
+    end
   end
 
   test "traceparent header is injected when list headers" do
-    %HTTPoison.Response{request: %{headers: headers}} =
-      Telepoison.get!("http://localhost:8000", [{"Accept", "application/json"}])
+    OpenTelemetry.Tracer.with_span :span_1 do
+      %HTTPoison.Response{request: %{headers: headers}} =
+        Telepoison.get!("http://localhost:8000", [{"Accept", "application/json"}])
 
-    assert "traceparent" in Enum.map(headers, &elem(&1, 0))
+      assert "traceparent" in Enum.map(headers, &elem(&1, 0))
+    end
   end
 
   test "traceparent header is injected to user-supplied map headers" do
-    %HTTPoison.Response{request: %{headers: headers}} =
-      Telepoison.get!("http://localhost:8000", %{"Accept" => "application/json"})
+    OpenTelemetry.Tracer.with_span :span_1 do
+      %HTTPoison.Response{request: %{headers: headers}} =
+        Telepoison.get!("http://localhost:8000", %{"Accept" => "application/json"})
 
-    assert "traceparent" in Enum.map(headers, &elem(&1, 0))
+      assert "traceparent" in Enum.map(headers, &elem(&1, 0))
+    end
   end
 
+  @tag foo: true
   test "additional span attributes can be passed to Telepoison invocation" do
-    %HTTPoison.Response{request: %{headers: headers}} =
-      Telepoison.get!("http://localhost:8000", [], ot_attributes: [{"app.callname", "mariorossi"}])
+    OpenTelemetry.Tracer.with_span :span_1 do
+      %HTTPoison.Response{request: %{headers: _headers}} =
+        Telepoison.get!("http://localhost:8000", [], ot_attributes: [{"app.callname", "mariorossi"}])
 
-    assert_receive {:span, span(attributes: attributes)}, 1000
+      assert_receive {:span, span(attributes: attributes)}, 1000
 
-    assert {"app.callname", "mariorossi"} in attributes
+      assert {"app.callname", "mariorossi"} in attributes
+    end
   end
 
   defp flush_mailbox do

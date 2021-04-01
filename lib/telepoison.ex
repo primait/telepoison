@@ -7,12 +7,14 @@ defmodule Telepoison do
   """
 
   use HTTPoison.Base
+
   require OpenTelemetry
   require OpenTelemetry.Tracer
   require OpenTelemetry.Span
   require Record
 
   alias HTTPoison.Request
+  alias OpenTelemetry.Tracer
 
   @doc """
   Setups the opentelemetry instrumentation for Telepoison
@@ -30,28 +32,32 @@ defmodule Telepoison do
   end
 
   def process_request_headers(headers) when is_list(headers) do
-    :ot_propagation.http_inject(headers)
+    headers
+    |> IO.inspect(label: :before)
+    |> :otel_propagator.text_map_inject()
+    |> IO.inspect(label: :after)
   end
 
   def request(%Request{options: opts} = request) do
     span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
 
     attributes =
-      [
-        {"http.method", request.method},
-        {"http.url", request.url}
-      ] ++ Keyword.get(opts, :ot_attributes, [])
+      ([
+         {"http.method", request.method},
+         {"http.url", request.url}
+       ] ++ Keyword.get(opts, :ot_attributes, []))
+      |> IO.inspect(label: :attributes)
 
-    OpenTelemetry.Tracer.start_span(span_name, %{attributes: attributes})
+    Tracer.start_span(span_name, %{attributes: attributes})
 
     super(request)
   end
 
   def process_response_status_code(status_code) do
-    OpenTelemetry.Span.set_attribute("http.status_code", status_code)
+    Tracer.set_attribute("http.status_code", status_code)
     # TODO: transform http status in http client span status and set in span
     # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
-    OpenTelemetry.Tracer.end_span()
+    Tracer.end_span()
     status_code
   end
 
