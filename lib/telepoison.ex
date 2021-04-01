@@ -33,32 +33,30 @@ defmodule Telepoison do
 
   def process_request_headers(headers) when is_list(headers) do
     headers
-    |> IO.inspect(label: :before)
     |> :otel_propagator.text_map_inject()
-    |> IO.inspect(label: :after)
   end
 
   def request(%Request{options: opts} = request) do
     span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
 
     attributes =
-      ([
-         {"http.method", request.method},
-         {"http.url", request.url}
-       ] ++ Keyword.get(opts, :ot_attributes, []))
-      |> IO.inspect(label: :attributes)
+      [
+        {"http.method", request.method |> Atom.to_string() |> String.upcase()},
+        {"http.url", request.url}
+      ] ++ Keyword.get(opts, :ot_attributes, [])
 
-    Tracer.start_span(span_name, %{attributes: attributes})
+    new_ctx = Tracer.start_span(span_name, %{attributes: attributes})
+    Tracer.set_current_span(new_ctx)
 
     super(request)
   end
 
   def process_response_status_code(status_code) do
-    Tracer.set_attribute("http.status_code", status_code)
+    ## Tracer.set_attribute("http.status_code", status_code)
     # TODO: transform http status in http client span status and set in span
     # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
+    Tracer.set_attribute("http.status_code", status_code)
     Tracer.end_span()
-    status_code
   end
 
   def compute_default_span_name(request) do
