@@ -54,6 +54,7 @@ defmodule Telepoison do
     # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
     Tracer.set_attribute("http.status_code", status_code)
     Tracer.end_span()
+    status_code
   end
 
   def compute_default_span_name(request) do
