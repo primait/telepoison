@@ -32,8 +32,7 @@ defmodule Telepoison do
   end
 
   def process_request_headers(headers) when is_list(headers) do
-    headers
-    |> :otel_propagator.text_map_inject()
+    :otel_propagator.text_map_inject(headers)
   end
 
   def request(%Request{options: opts} = request) do
@@ -52,8 +51,6 @@ defmodule Telepoison do
   end
 
   def process_response_status_code(status_code) do
-    ## Tracer.set_attribute("http.status_code", status_code)
-    # TODO: transform http status in http client span status and set in span
     # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
     Tracer.set_attribute("http.status_code", status_code)
     Tracer.end_span()
