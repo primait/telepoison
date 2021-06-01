@@ -7,12 +7,14 @@ defmodule Telepoison do
   """
 
   use HTTPoison.Base
+
   require OpenTelemetry
   require OpenTelemetry.Tracer
   require OpenTelemetry.Span
   require Record
 
   alias HTTPoison.Request
+  alias OpenTelemetry.Tracer
 
   @doc """
   Setups the opentelemetry instrumentation for Telepoison
@@ -30,7 +32,7 @@ defmodule Telepoison do
   end
 
   def process_request_headers(headers) when is_list(headers) do
-    :ot_propagation.http_inject(headers)
+    :otel_propagator.text_map_inject(headers)
   end
 
   def request(%Request{options: opts} = request) do
@@ -38,20 +40,20 @@ defmodule Telepoison do
 
     attributes =
       [
-        {"http.method", request.method},
+        {"http.method", request.method |> Atom.to_string() |> String.upcase()},
         {"http.url", request.url}
       ] ++ Keyword.get(opts, :ot_attributes, [])
 
-    OpenTelemetry.Tracer.start_span(span_name, %{attributes: attributes})
+    new_ctx = Tracer.start_span(span_name, %{attributes: attributes})
+    Tracer.set_current_span(new_ctx)
 
     super(request)
   end
 
   def process_response_status_code(status_code) do
-    OpenTelemetry.Span.set_attribute("http.status_code", status_code)
-    # TODO: transform http status in http client span status and set in span
     # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
-    OpenTelemetry.Tracer.end_span()
+    Tracer.set_attribute("http.status_code", status_code)
+    Tracer.end_span()
     status_code
   end
 

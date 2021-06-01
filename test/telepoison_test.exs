@@ -1,12 +1,12 @@
 defmodule TelepoisonTest do
   alias Telepoison
   use ExUnit.Case
+
   doctest Telepoison
 
   require Record
-  require OpenTelemetry.Tracer
 
-  for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/ot_span.hrl") do
+  for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
     Record.defrecord(name, spec)
   end
 
@@ -16,8 +16,8 @@ defmodule TelepoisonTest do
   end
 
   setup do
-    :ot_batch_processor.set_exporter(:ot_exporter_pid, self())
     flush_mailbox()
+    :otel_batch_processor.set_exporter(:otel_exporter_pid, self())
     :ok
   end
 
@@ -28,6 +28,8 @@ defmodule TelepoisonTest do
 
     assert ["http.method", "http.status_code", "http.url"] ==
              attributes |> Enum.map(&elem(&1, 0)) |> Enum.sort()
+
+    assert {"http.method", "GET"} in attributes
   end
 
   test "traceparent header is injected when no headers" do
@@ -50,15 +52,13 @@ defmodule TelepoisonTest do
   end
 
   test "additional span attributes can be passed to Telepoison invocation" do
-    %HTTPoison.Response{request: %{headers: headers}} =
-      Telepoison.get!("http://localhost:8000", [], ot_attributes: [{"app.callname", "mariorossi"}])
+    Telepoison.get!("http://localhost:8000", [], ot_attributes: [{"app.callname", "mariorossi"}])
 
     assert_receive {:span, span(attributes: attributes)}, 1000
-
     assert {"app.callname", "mariorossi"} in attributes
   end
 
-  defp flush_mailbox do
+  def flush_mailbox do
     receive do
       _ -> flush_mailbox()
     after
