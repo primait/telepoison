@@ -4,7 +4,7 @@ defmodule Telepoison.MixProject do
   def project do
     [
       app: :telepoison,
-      version: "0.1.2",
+      version: "1.0.0-rc.2",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -25,8 +25,8 @@ defmodule Telepoison.MixProject do
   defp deps do
     [
       {:httpoison, "~> 1.6"},
-      {:opentelemetry_api, "~> 0.6"},
-      {:opentelemetry, "~> 0.6", only: :test},
+      {:opentelemetry_api, "~> 1.0.0-rc.2"},
+      {:opentelemetry, "~> 1.0.0-rc.2", only: :test},
       {:plug, "~> 1.10", only: :test},
       {:plug_cowboy, "~> 2.2", only: :test},
       {:credo, "~> 1.5", only: [:dev, :test]},
