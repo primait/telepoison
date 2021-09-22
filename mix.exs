@@ -25,15 +25,19 @@ defmodule Telepoison.MixProject do
   defp deps do
     [
       {:httpoison, "~> 1.6"},
-      {:opentelemetry_api, "~> 1.0.0-rc.2"},
+      {:opentelemetry_api, "~> 1.0.0-rc.2"}
+    ] ++ dev_deps()
+  end
+
+  def dev_deps, do:
+    [
       {:opentelemetry, "~> 1.0.0-rc.2", only: :test},
-      {:plug, "~> 1.10", only: :test},
+      {:plug, "~> 1.12", only: :test},
       {:plug_cowboy, "~> 2.2", only: :test},
       {:credo, "~> 1.5", only: [:dev, :test]},
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.25.3", only: :dev, runtime: false}
     ]
-  end
 
   def package do
     [
