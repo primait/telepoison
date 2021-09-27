@@ -36,6 +36,7 @@ defmodule Telepoison do
   end
 
   def request(%Request{options: opts} = request) do
+    save_parent_ctx()
     span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
 
     attributes =
@@ -54,6 +55,7 @@ defmodule Telepoison do
     # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
     Tracer.set_attribute("http.status_code", status_code)
     Tracer.end_span()
+    restore_parent_ctx()
     status_code
   end
 
@@ -61,5 +63,17 @@ defmodule Telepoison do
     method_str = request.method |> Atom.to_string() |> String.upcase()
     %URI{authority: authority} = request.url |> process_request_url() |> URI.parse()
     "#{method_str} #{authority}"
+  end
+
+  @ctx_key {__MODULE__, :parent_ctx}
+  defp save_parent_ctx() do
+    ctx = Tracer.current_span_ctx()
+    Process.put(@ctx_key, ctx)
+  end
+
+  defp restore_parent_ctx() do
+    ctx = Process.get(@ctx_key, :undefined)
+    Process.delete(@ctx_key)
+    Tracer.set_current_span(ctx)
   end
 end
