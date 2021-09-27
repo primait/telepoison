@@ -15,7 +15,6 @@ defmodule Telepoison do
 
   alias HTTPoison.Request
   alias OpenTelemetry.Tracer
-  require Logger
 
   @doc """
   Setups the opentelemetry instrumentation for Telepoison
