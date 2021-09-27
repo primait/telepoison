@@ -66,12 +66,12 @@ defmodule Telepoison do
   end
 
   @ctx_key {__MODULE__, :parent_ctx}
-  defp save_parent_ctx() do
+  defp save_parent_ctx do
     ctx = Tracer.current_span_ctx()
     Process.put(@ctx_key, ctx)
   end
 
-  defp restore_parent_ctx() do
+  defp restore_parent_ctx do
     ctx = Process.get(@ctx_key, :undefined)
     Process.delete(@ctx_key)
     Tracer.set_current_span(ctx)
