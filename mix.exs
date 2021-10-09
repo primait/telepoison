@@ -1,15 +1,18 @@
 defmodule Telepoison.MixProject do
   use Mix.Project
 
+  @source_url "https://github.com/primait/telepoison"
+  @version "1.0.0-rc.4"
+
   def project do
     [
       app: :telepoison,
-      version: "1.0.0-rc.4",
+      version: @version,
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      docs: docs(),
       package: package(),
-      description: description(),
       aliases: aliases()
     ]
   end
@@ -41,10 +44,11 @@ defmodule Telepoison.MixProject do
 
   def package do
     [
+      description: "Telepoison is a opentelemetry-instrumented wrapper around HTTPPoison.",
       name: "telepoison",
       maintainers: ["Leonardo Donelli"],
       licenses: ["MIT"],
-      links: %{"Github" => "https://github.com/primait/telepoison"}
+      links: %{"GitHub" => @source_url}
     ]
   end
 
@@ -56,7 +60,16 @@ defmodule Telepoison.MixProject do
     ]
   end
 
-  def description do
-    "Telepoison is a opentelemetry-instrumented wrapper around HTTPPoison."
+  defp docs do
+    [
+      extras: [
+        "LICENSE.md": [title: "License"],
+        "README.md": [title: "Overview"]
+      ],
+      main: "readme",
+      source_url: @source_url,
+      source_ref: "v#{@version}",
+      formatters: ["html"]
+    ]
   end
 end
