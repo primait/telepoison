@@ -45,7 +45,7 @@ defmodule Telepoison do
         {"http.url", request.url}
       ] ++ Keyword.get(opts, :ot_attributes, [])
 
-    new_ctx = Tracer.start_span(span_name, %{attributes: attributes})
+    new_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: attributes})
     Tracer.set_current_span(new_ctx)
 
     super(request)
