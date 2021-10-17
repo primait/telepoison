@@ -75,7 +75,7 @@ through HTTP "jumps".
 
 ## Copyright and License
 
-Copyright (c) 2020 Leonardo Donelli
+Copyright (c) 2020 Prima.it
 
 This work is free. You can redistribute it and/or modify it under the
 terms of the MIT License. See the [LICENSE.md](./LICENSE.md) file for more details.
