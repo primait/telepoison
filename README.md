@@ -1,5 +1,11 @@
 # Telepoison
 
+[![Module Version](https://img.shields.io/hexpm/v/telepoison.svg)](https://hex.pm/packages/telepoison)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/telepoison/)
+[![Total Download](https://img.shields.io/hexpm/dt/telepoison.svg)](https://hex.pm/packages/telepoison)
+[![License](https://img.shields.io/hexpm/l/telepoison.svg)](https://github.com/primait/telepoison/blob/master/LICENSE.md)
+[![Last Updated](https://img.shields.io/github/last-commit/primait/telepoison.svg)](https://github.com/primait/telepoison/commits/master)
+
 Telepoison is a [opentelemetry-instrumented](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/glossary.md#instrumented-library) wrapper around HTTPPoison.
 
 ## Usage
@@ -39,7 +45,7 @@ ends the span once the response is received.
 It automatically sets some of the [HTTP span attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md) like `http.status`, `http.host` etc,
 based on the request and response data.
 
-Telepoison by itself is not particularly useful: it becomes useful when used in conjuction with a "server-side"
+Telepoison by itself is not particularly useful: it becomes useful when used in conjunction with a "server-side"
 opentelemetry-instrumented library, e.g. [opentelemetry_plug](https://github.com/opentelemetry-beam/opentelemetry_plug).
 These do the opposite work: they take the trace context information from the request headers,
 and they create a [SERVER](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/api.md#spankind) span which becomes the currently active span.
@@ -66,3 +72,10 @@ through HTTP "jumps".
 * Support for explicit parent span
 * Support for fixed span attributes, either in `Teleposion.setup` or in config
 * A lot of other stuff..
+
+## Copyright and License
+
+Copyright (c) 2020 Prima.it
+
+This work is free. You can redistribute it and/or modify it under the
+terms of the MIT License. See the [LICENSE.md](./LICENSE.md) file for more details.
