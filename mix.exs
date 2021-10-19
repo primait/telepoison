@@ -2,7 +2,7 @@ defmodule Telepoison.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/primait/telepoison"
-  @version "1.0.0-rc.4"
+  @version "1.0.0-rc.6"
 
   def project do
     [
@@ -28,13 +28,14 @@ defmodule Telepoison.MixProject do
   defp deps do
     [
       {:httpoison, "~> 1.6"},
-      {:opentelemetry_api, "~> 1.0.0-rc.2"}
+      {:opentelemetry_api, "~> 1.0.0-rc.3"}
     ] ++ dev_deps()
   end
 
   def dev_deps, do:
     [
-      {:opentelemetry, "~> 1.0.0-rc.2", only: :test},
+      {:opentelemetry, "~> 1.0.0-rc.3", only: :test},
+      {:opentelemetry_exporter, "~> 1.0.0-rc.3", only: :test},
       {:plug, "~> 1.12", only: :test},
       {:plug_cowboy, "~> 2.2", only: :test},
       {:credo, "~> 1.5", only: [:dev, :test]},

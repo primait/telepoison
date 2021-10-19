@@ -22,7 +22,7 @@ defmodule Telepoison do
   You should call this method on your application startup, before Telepoison is used.
   """
   def setup do
-    OpenTelemetry.register_application_tracer(:telepoison)
+    :ok
   end
 
   def process_request_headers(headers) when is_map(headers) do
@@ -32,7 +32,7 @@ defmodule Telepoison do
   end
 
   def process_request_headers(headers) when is_list(headers) do
-    :otel_propagator.text_map_inject(headers)
+    :otel_propagator_text_map.inject(headers)
   end
 
   def request(%Request{options: opts} = request) do
