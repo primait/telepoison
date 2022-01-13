@@ -2,7 +2,7 @@ defmodule Telepoison.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/primait/telepoison"
-  @version "1.0.0-rc.6"
+  @version "1.0.0"
 
   def project do
     [
