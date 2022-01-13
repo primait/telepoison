@@ -27,7 +27,7 @@ defmodule TelepoisonTest do
     assert_receive {:span, span(attributes: attributes)}
 
     assert ["http.method", "http.status_code", "http.url"] ==
-             attributes |> Enum.map(&elem(&1, 0)) |> Enum.sort()
+             attributes |> elem(4) |> Map.keys() |> Enum.sort()
 
     assert {"http.method", "GET"} in attributes
   end
@@ -55,7 +55,7 @@ defmodule TelepoisonTest do
     Telepoison.get!("http://localhost:8000", [], ot_attributes: [{"app.callname", "mariorossi"}])
 
     assert_receive {:span, span(attributes: attributes)}, 1000
-    assert {"app.callname", "mariorossi"} in attributes
+    assert {"app.callname", "mariorossi"} in elem(attributes, 4)
   end
 
   def flush_mailbox do
