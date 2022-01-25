@@ -24,10 +24,11 @@ defmodule TelepoisonTest do
   test "standard http client span attribute are set in span" do
     Telepoison.get!("http://localhost:8000")
 
-    assert_receive {:span, span(attributes: attributes)}
+    assert_receive {:span, span(attributes: attributes_record)}
+    attributes = elem(attributes_record, 4)
 
     assert ["http.method", "http.status_code", "http.url"] ==
-             attributes |> elem(4) |> Map.keys() |> Enum.sort()
+             attributes |> Map.keys() |> Enum.sort()
 
     assert {"http.method", "GET"} in attributes
   end

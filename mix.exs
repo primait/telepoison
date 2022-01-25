@@ -38,7 +38,7 @@ defmodule Telepoison.MixProject do
       {:opentelemetry_exporter, "~> 1.0", only: :test},
       {:plug, "~> 1.12", only: :test},
       {:plug_cowboy, "~> 2.2", only: :test},
-      {:credo, "~> 1.5", only: [:dev, :test]},
+      {:credo, "~> 1.6", only: [:dev, :test]},
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
       {:ex_doc, ">= 0.25.3", only: :dev, runtime: false}
     ]
