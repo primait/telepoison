@@ -7,7 +7,7 @@ spec:
   system: prima.it
 metadata:
   name: telepoison 
-  description: Telepoison is an opentelemetry-instrumented wrapper around HTTPPoison
+  description: Telepoison is an opentelemetry-instrumented wrapper around HTTPoison
   tags:
   - elixir
   links:

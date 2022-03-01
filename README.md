@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/hexpm/l/telepoison.svg)](https://github.com/primait/telepoison/blob/master/LICENSE.md)
 [![Last Updated](https://img.shields.io/github/last-commit/primait/telepoison.svg)](https://github.com/primait/telepoison/commits/master)
 
-Telepoison is a [opentelemetry-instrumented](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/glossary.md#instrumented-library) wrapper around HTTPPoison.
+Telepoison is a [opentelemetry-instrumented](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/glossary.md#instrumented-library) wrapper around HTTPoison.
 
 ## Usage
 
