@@ -7,7 +7,7 @@ spec:
   system: prima.it
 metadata:
   name: telepoison 
-  description: 
+  description: Telepoison is an opentelemetry-instrumented wrapper around HTTPPoison
   tags:
   - elixir
   links:
@@ -18,7 +18,3 @@ metadata:
   - url: https://hexdocs.pm/telepoison
     icon: link
     title: official documentation
-
-  - url: https://github.com/primait/telepoison
-    icon: github
-    title: github repository
