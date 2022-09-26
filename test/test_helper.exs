@@ -7,8 +7,12 @@ defmodule TestServer do
   plug(:match)
   plug(:dispatch)
 
-  match _ do
+  match "/" do
     send_resp(conn, 200, "It's polite to reply!")
+  end
+
+  match "/status/:status_code" do
+    send_resp(conn, String.to_integer(status_code), "Here's that status code you ordered!")
   end
 end
 
