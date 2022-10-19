@@ -27,7 +27,7 @@ defmodule TelepoisonTest do
     assert_receive {:span, span(attributes: attributes_record)}
     attributes = elem(attributes_record, 4)
 
-    assert ["http.method", "http.status_code", "http.url"] ==
+    assert ["http.method", "http.route", "http.status_code", "http.url"] ==
              attributes |> Map.keys() |> Enum.sort()
 
     assert {"http.method", "GET"} in attributes
@@ -57,6 +57,20 @@ defmodule TelepoisonTest do
 
     assert_receive {:span, span(attributes: attributes)}, 1000
     assert {"app.callname", "mariorossi"} in elem(attributes, 4)
+  end
+
+  test "resource route can be explicitly passed to Telepoison invocation" do
+    Telepoison.get!("http://localhost:8000/user/edit/24", [], resource_route: "/user/edit")
+
+    assert_receive {:span, span(attributes: attributes)}, 1000
+    assert {"http.route", "/user/edit"} in elem(attributes, 4)
+  end
+
+  test "resource route can be implicitly inferred by Telepoison invocation" do
+    Telepoison.get!("http://localhost:8000/user/edit/24")
+
+    assert_receive {:span, span(attributes: attributes)}, 1000
+    assert {"http.route", "/user/:subpath"}
   end
 
   def flush_mailbox do

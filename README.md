@@ -21,21 +21,26 @@ Telepoison.get!(url, headers, opts)
 ```
 
 Additionally, telepoison adds some options that can be passed in the `opts` HTTPoison argument to set OpenTelemetry-related stuff.
-These start with `:ot_`
+These typically start with `:ot_`
 
 * `:ot_span_name` sets the span name
 * `:ot_attributes` additional span attributes that will be added to the span. Should be a list of {name, value} tuples.
+* `:resource_route` sets the `http.route` attribute explicitly. This will be inferred automatically if not provided.
 
 
 Example:
 ```elixir
 Telepoison.get!(
-  "en.wikipedia.org",
+  "https://www.example.com/user/list",
   [],
-  ot_span_name: "fetch wikipedia homepage",
-  ot_attributes: [{"wikipedia.language", "en"}]
+  ot_span_name: "list example users",
+  ot_attributes: [{"example.language", "en"}],
+  resource_route: "/user/list"
 )
 ```
+
+In the example above, if `:resource_route` was not provided, it would be inferred as "/user/:subpath". As evidenced, this fallback is
+rather conservative, so it is highly recommended to supply the `:resource_route` explicitly.
 
 ## How it works
 
