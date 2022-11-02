@@ -41,9 +41,10 @@ defmodule Telepoison do
   See `HTTPoison.request/1` for further details regarding `request` options.
 
   Will attempt to automatically set the `http.route` Open Telemetry metadata attribute by
-  removing the last part of the `request.url`, since this part typically contains dynamic data.
+  removing the last part of the `request.url` (since this part typically contains dynamic data)
+  if the `resource_route` option is set to `:infer`.
 
-  If this behavior is not desirable, it can be set directly by using the `:resource_route` optional parameter.
+  If this behavior is not desirable, it can be set directly by using the aforementioned option.
 
     ## Examples
 
@@ -51,7 +52,8 @@ defmodule Telepoison do
       ...> method: :post,
       ...> url: "https://www.example.com/users/edit/2",
       ...> body: ~s({"foo": 3}),
-      ...> headers: [{"Accept", "application/json"}]}
+      ...> headers: [{"Accept", "application/json"}],
+      ...> options: [resource_route: :infer]}
       iex> Telepoison.request(request)
 
   """
