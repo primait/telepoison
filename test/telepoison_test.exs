@@ -56,21 +56,21 @@ defmodule TelepoisonTest do
     Telepoison.get!("http://localhost:8000", [], ot_attributes: [{"app.callname", "mariorossi"}])
 
     assert_receive {:span, span(attributes: attributes)}, 1000
-    assert {"app.callname", "mariorossi"} in elem(attributes, 4)
+    assert confirm_attributes(attributes, {"app.callname", "mariorossi"})
   end
 
   test "resource route can be explicitly passed to Telepoison invocation" do
     Telepoison.get!("http://localhost:8000/user/edit/24", [], resource_route: "/user/edit")
 
     assert_receive {:span, span(attributes: attributes)}, 1000
-    assert {"http.route", "/user/edit"} in elem(attributes, 4)
+    assert confirm_attributes(attributes, {"http.route", "/user/edit"})
   end
 
   test "resource route can be implicitly inferred by Telepoison invocation" do
     Telepoison.get!("http://localhost:8000/user/edit/24", [], resource_route: :infer)
 
     assert_receive {:span, span(attributes: attributes)}, 1000
-    assert {"http.route", "/user/:subpath"} in elem(attributes, 4)
+    assert confirm_attributes(attributes, {"http.route", "/user/:subpath"})
   end
 
   def flush_mailbox do
@@ -79,5 +79,14 @@ defmodule TelepoisonTest do
     after
       10 -> :ok
     end
+  end
+
+  defp confirm_attributes(attributes, attributes_to_confirm) do
+    attributes
+    |> Tuple.to_list()
+    |> Enum.filter(&is_map/1)
+    |> Enum.any?(fn map ->
+      attributes_to_confirm in map
+    end)
   end
 end
