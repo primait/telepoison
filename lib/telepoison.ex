@@ -62,8 +62,8 @@ defmodule Telepoison do
 
     resource_route =
       case Keyword.get(opts, :resource_route) do
-        nil ->
-          Telepoison.URI.infer_route(request)
+        :infer ->
+          Telepoison.URI.infer_route_from_request(request)
 
         route ->
           route

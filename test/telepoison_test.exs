@@ -67,10 +67,10 @@ defmodule TelepoisonTest do
   end
 
   test "resource route can be implicitly inferred by Telepoison invocation" do
-    Telepoison.get!("http://localhost:8000/user/edit/24")
+    Telepoison.get!("http://localhost:8000/user/edit/24", [], resource_route: :infer)
 
     assert_receive {:span, span(attributes: attributes)}, 1000
-    assert {"http.route", "/user/:subpath"}
+    assert {"http.route", "/user/:subpath"} in elem(attributes, 4)
   end
 
   def flush_mailbox do
