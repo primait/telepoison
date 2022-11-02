@@ -60,14 +60,14 @@ defmodule TelepoisonTest do
   end
 
   test "resource route can be explicitly passed to Telepoison invocation" do
-    Telepoison.get!("http://localhost:8000/user/edit/24", [], resource_route: "/user/edit")
+    Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: "/user/edit")
 
     assert_receive {:span, span(attributes: attributes)}, 1000
     assert confirm_attributes(attributes, {"http.route", "/user/edit"})
   end
 
   test "resource route can be implicitly inferred by Telepoison invocation" do
-    Telepoison.get!("http://localhost:8000/user/edit/24", [], resource_route: :infer)
+    Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
 
     assert_receive {:span, span(attributes: attributes)}, 1000
     assert confirm_attributes(attributes, {"http.route", "/user/:subpath"})
