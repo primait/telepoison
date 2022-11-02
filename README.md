@@ -25,7 +25,7 @@ These typically start with `:ot_`
 
 * `:ot_span_name` sets the span name
 * `:ot_attributes` additional span attributes that will be added to the span. Should be a list of {name, value} tuples.
-* `:resource_route` sets the `http.route` attribute explicitly. This will be inferred automatically if not provided.
+* `:resource_route` sets the `http.route` attribute explicitly. This can be inferred automatically by passing in `:infer` as the value instead.
 
 
 Example:
@@ -39,8 +39,9 @@ Telepoison.get!(
 )
 ```
 
-In the example above, if `:resource_route` was not provided, it would be inferred as "/user/:subpath". As evidenced, this fallback is
-rather conservative, so it is highly recommended to supply the `:resource_route` explicitly.
+In the example above, if `:infer` was provided as the value for the `:resource_route` option, it would be inferred as "/user/:subpath".
+
+As is evident, this fallback is rather conservative, so it is highly recommended to supply the `:resource_route` explicitly.
 
 ## How it works
 
