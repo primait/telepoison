@@ -27,7 +27,7 @@ defmodule TelepoisonTest do
     assert_receive {:span, span(attributes: attributes_record)}
     attributes = elem(attributes_record, 4)
 
-    assert ["http.method", "http.route", "http.status_code", "http.url"] ==
+    assert ["http.method", "http.status_code", "http.url"] ==
              attributes |> Map.keys() |> Enum.sort()
 
     assert {"http.method", "GET"} in attributes

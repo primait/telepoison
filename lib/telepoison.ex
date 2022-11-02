@@ -74,9 +74,12 @@ defmodule Telepoison do
     attributes =
       [
         {"http.method", request.method |> Atom.to_string() |> String.upcase()},
-        {"http.url", request.url},
-        {"http.route", resource_route}
-      ] ++ Keyword.get(opts, :ot_attributes, [])
+        {"http.url", request.url}
+      ] ++
+        Keyword.get(opts, :ot_attributes, []) ++
+        if resource_route != nil,
+          do: [{"http.route", resource_route}],
+          else: []
 
     new_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: attributes})
     Tracer.set_current_span(new_ctx)
