@@ -59,18 +59,46 @@ defmodule TelepoisonTest do
     assert confirm_attributes(attributes, {"app.callname", "mariorossi"})
   end
 
-  test "resource route can be explicitly passed to Telepoison invocation" do
+  test "resource route can be explicitly passed to Telepoison invocation as a string" do
     Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: "/user/edit")
 
     assert_receive {:span, span(attributes: attributes)}, 1000
     assert confirm_attributes(attributes, {"http.route", "/user/edit"})
   end
 
-  test "resource route can be implicitly inferred by Telepoison invocation" do
-    Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
+  test "resource route can be explicitly passed to Telepoison invocation as a function" do
+    infer_fn = fn request -> URI.parse(request.url).path end
+
+    Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: infer_fn)
 
     assert_receive {:span, span(attributes: attributes)}, 1000
-    assert confirm_attributes(attributes, {"http.route", "/user/:subpath"})
+    assert confirm_attributes(attributes, {"http.route", "/user/edit/24"})
+  end
+
+  describe "Telepoison setup" do
+    setup do
+      Telepoison.stop()
+    end
+
+    test "resource route can be implicitly inferred by Telepoison invocation by default function" do
+      Telepoison.setup(infer_source: :default)
+
+      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      assert confirm_attributes(attributes, {"http.route", "/user/:subpath"})
+    end
+
+    test "resource route can be implicitly inferred by Telepoison invocation by explicitly configured function" do
+      infer_fn = fn request -> URI.parse(request.url).path end
+
+      Telepoison.setup(infer_source: infer_fn)
+
+      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      assert confirm_attributes(attributes, {"http.route", "/user/:subpath"})
+    end
   end
 
   def flush_mailbox do

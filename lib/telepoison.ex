@@ -16,12 +16,31 @@ defmodule Telepoison do
   alias HTTPoison.Request
   alias OpenTelemetry.Tracer
 
-  @doc """
-  Setups the opentelemetry instrumentation for Telepoison
+  @doc ~S"""
+  Setups the Open Telemetry instrumentation for Telepoison.
 
-  You should call this method on your application startup, before Telepoison is used.
+  You should call this function within your application startup, before Telepoison is used.
   """
-  def setup do
+  def setup(opts \\ []) do
+    Agent.start_link(
+      fn ->
+        case Keyword.get(opts, :infer_route) do
+          :default ->
+            {:ok, &Telepoison.URI.infer_route_from_request/1}
+
+          infer_fn when is_function(infer_fn, 1) ->
+            {:ok, infer_fn}
+
+          :disabled ->
+            :ok
+
+          _ ->
+            :ok
+        end
+      end,
+      name: Keyword.get(opts, :name, __MODULE__)
+    )
+
     :ok
   end
 
@@ -64,11 +83,26 @@ defmodule Telepoison do
 
     resource_route =
       case Keyword.get(opts, :ot_resource_route) do
-        :infer ->
-          Telepoison.URI.infer_route_from_request(request)
-
-        route ->
+        route when is_binary(route) ->
           route
+
+        infer_fn when is_function(infer_fn, 1) ->
+          infer_fn.(request)
+
+        :infer ->
+          Agent.get(
+            __MODULE__,
+            fn
+              {:ok, infer_fn} when is_function(infer_fn, 1) ->
+                infer_fn.(request)
+
+              :ok ->
+                nil
+            end
+          )
+
+        _ ->
+          nil
       end
 
     attributes =
