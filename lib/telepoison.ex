@@ -17,9 +17,41 @@ defmodule Telepoison do
   alias OpenTelemetry.Tracer
 
   @doc ~S"""
-  Setups the Open Telemetry instrumentation for Telepoison.
-
+  Configures Telepoison using the provided `opts` `Keyword list`.
   You should call this function within your application startup, before Telepoison is used.
+
+  Using the `:infer_route` option, you can customise the URL resource route inference procedure
+  that is used to set the `http.route` Open Telemetry metadata attribute.
+
+  If `:default` is provided then the out of the box, conservative inference provided by
+  `Telepoison.URI.infer_route_from_request/1` is used to determine the inference.
+
+  If an anonymous function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) is provided
+  then that function is used to determine the inference.
+
+  If `:disabled` is provided then no inference is used.
+
+  If no value is provided, no inference is used.
+
+  This can be overridden per each call to `Telepoison.request/1`.
+
+    ## Examples
+
+      iex> Telepoison.setup(infer_route: :default)
+      :ok
+
+      iex> infer_fn = fn
+      ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
+      ...> end
+      iex> Telepoison.setup(infer_route: infer_fn)
+      :ok
+
+      iex> Telepoison.setup(infer_route: :disabled)
+      :ok
+
+      iex> Telepoison.setup()
+      :ok
+
   """
   def setup(opts \\ []) do
     Agent.start_link(
@@ -38,7 +70,7 @@ defmodule Telepoison do
             :ok
         end
       end,
-      name: Keyword.get(opts, :name, __MODULE__)
+      name: __MODULE__
     )
 
     :ok
@@ -55,24 +87,47 @@ defmodule Telepoison do
   end
 
   @doc ~S"""
-  Performs a request using Telepoison with the provided `request` options.
+  Performs a request using Telepoison with the provided `t:HTTPoison.Request/0` `request`.
 
-  See `HTTPoison.request/1` for further details regarding `request` options.
+  Depending on configuration passed to `Telepoison.setup/1` and whether or not the `:ot_resource_route`
+  option is set to `:infer` (provided as a part of the `t:HTTPoison.Request/0` `options` `Keyword list`)
+  this may attempt to automatically set the `http.route` Open Telemetry metadata attribute by obtaining
+  the first segment of the `t:HTTPoison.Request/0` `url` (since this part typically does not contain dynamic data)
 
-  Will attempt to automatically set the `http.route` Open Telemetry metadata attribute by
-  removing the last part of the `request.url` (since this part typically contains dynamic data)
-  if the `resource_route` option is set to `:infer`.
-
-  If this behavior is not desirable, it can be set directly by using the aforementioned option.
+  If this behavior is not desirable, it can be set directly as a string or an anonymous function
+  with an arity of 1 (the `t:HTTPoison.Request/0` `request`) by using the aforementioned `:ot_resource_route` option.
 
     ## Examples
 
+      iex> Telepoison.setup()
       iex> request = %HTTPoison.Request{
       ...> method: :post,
       ...> url: "https://www.example.com/users/edit/2",
       ...> body: ~s({"foo": 3}),
       ...> headers: [{"Accept", "application/json"}],
-      ...> options: [resource_route: :infer]}
+      ...> options: [ot_resource_route: :infer]}
+      iex> Telepoison.request(request)
+
+      iex> Telepoison.setup()
+      iex> resource_route = "/users/edit/"
+      iex> request = %HTTPoison.Request{
+      ...> method: :post,
+      ...> url: "https://www.example.com/users/edit/2",
+      ...> body: ~s({"foo": 3}),
+      ...> headers: [{"Accept", "application/json"}],
+      ...> options: [ot_resource_route: resource_route]}
+      iex> Telepoison.request(request)
+
+      iex> Telepoison.setup()
+      iex> infer_fn = fn
+      ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
+      ...> end
+      iex> request = %HTTPoison.Request{
+      ...> method: :post,
+      ...> url: "https://www.example.com/users/edit/2",
+      ...> body: ~s({"foo": 3}),
+      ...> headers: [{"Accept", "application/json"}],
+      ...> options: [ot_resource_route: infer_fn]}
       iex> Telepoison.request(request)
 
   """
