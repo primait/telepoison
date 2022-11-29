@@ -24,13 +24,15 @@ Telepoison.get!(url, headers, opts)
 
 ## Configuration
 
-`Telepoison.setup/1` takes a `Keyword list` that can configure if and how the `http.route` Open Telemetry metadata will be set per request using the `:infer_route` option.
+`Telepoison.setup/1` takes a `Keyword list` that can configure if and how the `http.route` Open Telemetry metadata will be set per request using the `:infer_route` option
 
 * If no value is provided then the out of the box, conservative inference provided by `Telepoison.URI.infer_route_from_request/1` is used to determine the inference
 
-* If an function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference
+* If a function with an arity of 1 (the argument given being the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference
 
-This can be overridden per each call to `Telepoison.request/1` derived functions (`Telepoison.get/3`, `Telepoison.get!/3` etc.)
+This can be overridden per each call to `Telepoison.request/1` derived functions (`Telepoison.get/3`, `Telepoison.get!/3`, `Telepoison.post/3` etc.)
+
+See here for [examples](#Examples)
 
 ## Open Telemetry integration
 
@@ -43,13 +45,16 @@ the `Keyword list` `opts` parameter (or the `HTTPoison.Request` `options` `Keywo
 
 If the value is a string or an function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) that is used to set the attribute
 
-If `:infer` is provided, then the function discussed within the *Configuration* section is used to set the attribute
+If `:infer` is provided, then the function discussed within the [Configuration](#Configuration) section is used to set the attribute
 
-**It is highly recommended** to supply the `:ot_resource_route` explicitly as either a string or an anonymous function with an arity of 1.
+**It is highly recommended** to supply the `:ot_resource_route` explicitly as either a string or a function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) 
 
-Example:
+## Examples
+
+In the below examples, `Telepoison.get!/3` is used for the sake of simplicity but other functions derived from `Telepoison.request/1` can be used
+
 ```elixir
-Telepoison.setup(infer_route: :default)
+Telepoison.setup()
 
 Telepoison.get!(
   "https://www.example.com/user/list",
@@ -60,7 +65,49 @@ Telepoison.get!(
 )
 ```
 
-In the example above, as `:infer` was provided as the value for the `:ot_resource_route` option and the out of the box inference configured, the attribute would be inferred as */user/:subpath*.
+In the example above:
+* `Telepoison.setup/1` is called with no arguments
+* `:infer` is passed as the value for `:ot_resource_route` `Keyword list` option
+
+Given the above, the `http.route` attribute will be inferred as */user/:subpath*
+
+```elixir
+infer_fn = fn 
+  %HTTPoison.Request{} = request -> URI.parse(request.url).path
+end
+
+Telepoison.setup(infer_route: infer_fn)
+
+Telepoison.get!(
+  "https://www.example.com/user/list",
+  [],
+  ot_resource_route: :infer
+)
+```
+
+In the example above:
+* `Telepoison.setup/1` is called with the `:infer_route` `Keyword list` option set to a function which takes a `%HTTPoison.Request/0` argument, returning the path of the request URL
+* `:infer` is passed as the value for `:ot_resource_route` `Keyword list` option
+
+Given the above, the `http.route` attribute will be inferred as */user/list*
+
+```elixir
+Telepoison.setup()
+
+Telepoison.get!(
+  "https://www.example.com/user/list",
+  [],
+  ot_span_name: "list example users",
+  ot_attributes: [{"example.language", "en"}],
+  ot_resource_route: "my secret path"
+)
+```
+
+In the example above:
+* `Telepoison.setup/1` is called with the `:infer_route` `Keyword list` option set to a function which takes a `%HTTPoison.Request/0` argument, returning the path of the request URL
+* `"my secret path"` is passed as the value for `:ot_resource_route` `Keyword list` option
+
+Given the above, the `http.route` attribute will be inferred as *my secret path*
 
 ## How it works
 
