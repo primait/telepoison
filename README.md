@@ -24,20 +24,20 @@ Telepoison.get!(url, headers, opts)
 
 ## Configuration
 
-`Telepoison.setup/1` takes a `Keyword list` that can configure if and how the `http.route` Open Telemetry metadata will be set per request using the `:infer_route` option
+`Telepoison.setup/1` takes a `Keyword list` that can configure how the `http.route` Open Telemetry metadata will be set per request using the `:infer_route` option
 
 * If no value is provided then the out of the box, conservative inference provided by `Telepoison.URI.infer_route_from_request/1` is used to determine the inference
 
 * If a function with an arity of 1 (the argument given being the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference
 
-This can be overridden per each call to `Telepoison.request/1` derived functions (`Telepoison.get/3`, `Telepoison.get!/3`, `Telepoison.post/3` etc.)
+This can be overridden per each call to Telepoison functions that wrap `Telepoison.request/1`, such as `Telepoison.get/3`, `Telepoison.get!/3`, `Telepoison.post/3` etc.
 
 See here for [examples](#Examples)
 
 ## Open Telemetry integration
 
 Additionally, `Telepoison` provides some options that can be added to each derived function via
-the `Keyword list` `opts` parameter (or the `HTTPoison.Request` `options` `Keyword list` if calling `Telepoison.Request/1` directly). These are prefixed with `:ot_`.
+the `Keyword list` `opts` parameter (or the `t:HTTPoison.Request/0` `Keyword list` `options` parameter if calling `Telepoison.Request/1` directly). These are prefixed with `:ot_`.
 
 * `:ot_span_name` - sets the span name.
 * `:ot_attributes` - a list of `{name, value}` `tuple` attributes that will be added to the span.
@@ -97,8 +97,6 @@ Telepoison.setup()
 Telepoison.get!(
   "https://www.example.com/user/list",
   [],
-  ot_span_name: "list example users",
-  ot_attributes: [{"example.language", "en"}],
   ot_resource_route: "my secret path"
 )
 ```
