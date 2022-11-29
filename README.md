@@ -26,13 +26,9 @@ Telepoison.get!(url, headers, opts)
 
 `Telepoison.setup/1` takes a `Keyword list` that can configure if and how the `http.route` Open Telemetry metadata will be set per request using the `:infer_route` option.
 
-* If `:default` is provided then the out of the box, conservative inference provided by `Telepoison.URI.infer_route_from_request/1` is used to determine the inference.
+* If no value is provided then the out of the box, conservative inference provided by `Telepoison.URI.infer_route_from_request/1` is used to determine the inference
 
-* If an anonymous function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference.
-
-* If `:disabled` is provided then no inference is used.
-
-* If no value is provided, no inference is used.
+* If an function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference
 
 This can be overridden per each call to `Telepoison.request/1` derived functions (`Telepoison.get/3`, `Telepoison.get!/3` etc.)
 
@@ -45,9 +41,9 @@ the `Keyword list` `opts` parameter (or the `HTTPoison.Request` `options` `Keywo
 * `:ot_attributes` - a list of `{name, value}` `tuple` attributes that will be added to the span.
 * `:ot_resource_route` - sets the `http.route` attribute, depending on the value provided.
 
-If the value is a string or an anonymous function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) that is used to set the attribute.
+If the value is a string or an function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) that is used to set the attribute
 
-If `:infer` is provided, then either the out of the box or custom inference discussed within the Configuration section is used to set the attribute, unless it has been disabled.
+If `:infer` is provided, then the function discussed within the *Configuration* section is used to set the attribute
 
 **It is highly recommended** to supply the `:ot_resource_route` explicitly as either a string or an anonymous function with an arity of 1.
 

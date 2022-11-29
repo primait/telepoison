@@ -30,7 +30,7 @@ defmodule Telepoison.URITest do
     end
 
     test "Request URL '#{@base_uri}/user/24' is inferred as a route of '/user/:subpath'" do
-      url = "#{@base_url}/user/24"
+      url = "#{@base_uri}/user/24"
       request = %Request{url: url}
 
       result = UtilsURI.infer_route_from_request(request)

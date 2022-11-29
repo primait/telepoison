@@ -77,8 +77,8 @@ defmodule TelepoisonTest do
   end
 
   describe "Telepoison setup with additional configuration" do
-    test "resource route can be implicitly inferred by Telepoison invocation by default function" do
-      Telepoison.setup(infer_route: :default)
+    test "resource route can be implicitly inferred by Telepoison invocation" do
+      Telepoison.setup()
 
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
 
@@ -86,7 +86,7 @@ defmodule TelepoisonTest do
       assert confirm_attributes(attributes, {"http.route", "/user/:subpath"})
     end
 
-    test "resource route can be implicitly inferred by Telepoison invocation by explicitly configured function" do
+    test "resource route can be implicitly inferred by Telepoison invocation via a function passed to Telepoison.setup/1" do
       infer_fn = fn
         %HTTPoison.Request{} = request -> URI.parse(request.url).path
       end
@@ -97,6 +97,34 @@ defmodule TelepoisonTest do
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"http.route", "/user/edit/24"})
+    end
+
+    test "implicit resource route inferrence can be overridden with a function passed to the Telepoison invocation" do
+      setup_infer_fn = fn
+        %HTTPoison.Request{} = request -> URI.parse(request.url).path
+      end
+
+      invocation_infer_fn = fn _ -> "test" end
+
+      Telepoison.setup(infer_route: setup_infer_fn)
+
+      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: invocation_infer_fn)
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      assert confirm_attributes(attributes, {"http.route", "test"})
+    end
+
+    test "implicit resource route inferrence can be overriden with a string passed to the Telepoison invocation" do
+      setup_infer_fn = fn
+        %HTTPoison.Request{} = request -> URI.parse(request.url).path
+      end
+
+      Telepoison.setup(infer_route: setup_infer_fn)
+
+      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: "test")
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      assert confirm_attributes(attributes, {"http.route", "test"})
     end
   end
 

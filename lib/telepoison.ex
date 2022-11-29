@@ -23,21 +23,17 @@ defmodule Telepoison do
   Using the `:infer_route` option, you can customise the URL resource route inference procedure
   that is used to set the `http.route` Open Telemetry metadata attribute.
 
-  If `:default` is provided then the out of the box, conservative inference provided by
-  `Telepoison.URI.infer_route_from_request/1` is used to determine the inference.
-
-  If an anonymous function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) is provided
+  If a function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) is provided
   then that function is used to determine the inference.
 
-  If `:disabled` is provided then no inference is used.
-
-  If no value is provided, no inference is used.
+  If no value is provided then the out of the box, conservative inference provided by
+  `Telepoison.URI.infer_route_from_request/1` is used to determine the inference.
 
   This can be overridden per each call to `Telepoison.request/1`.
 
     ## Examples
 
-      iex> Telepoison.setup(infer_route: :default)
+      iex> Telepoison.setup()
       :ok
 
       iex> infer_fn = fn
@@ -46,28 +42,16 @@ defmodule Telepoison do
       iex> Telepoison.setup(infer_route: infer_fn)
       :ok
 
-      iex> Telepoison.setup(infer_route: :disabled)
-      :ok
-
-      iex> Telepoison.setup()
-      :ok
-
   """
   def setup(opts \\ []) do
     Agent.start_link(
       fn ->
         case Keyword.get(opts, :infer_route) do
-          :default ->
+          nil ->
             {:ok, &Telepoison.URI.infer_route_from_request/1}
 
           infer_fn when is_function(infer_fn, 1) ->
             {:ok, infer_fn}
-
-          :disabled ->
-            :ok
-
-          _ ->
-            :ok
         end
       end,
       name: __MODULE__
@@ -94,10 +78,18 @@ defmodule Telepoison do
   this may attempt to automatically set the `http.route` Open Telemetry metadata attribute by obtaining
   the first segment of the `t:HTTPoison.Request/0` `url` (since this part typically does not contain dynamic data)
 
-  If this behavior is not desirable, it can be set directly as a string or an anonymous function
+  If this behavior is not desirable, it can be set directly as a string or a function
   with an arity of 1 (the `t:HTTPoison.Request/0` `request`) by using the aforementioned `:ot_resource_route` option.
 
     ## Examples
+
+      iex> Telepoison.setup()
+      iex> request = %HTTPoison.Request{
+      ...> method: :post,
+      ...> url: "https://www.example.com/users/edit/2",
+      ...> body: ~s({"foo": 3}),
+      ...> headers: [{"Accept", "application/json"}]}
+      iex> Telepoison.request(request)
 
       iex> Telepoison.setup()
       iex> request = %HTTPoison.Request{
@@ -150,9 +142,6 @@ defmodule Telepoison do
             fn
               {:ok, infer_fn} when is_function(infer_fn, 1) ->
                 infer_fn.(request)
-
-              :ok ->
-                nil
             end
           )
 
