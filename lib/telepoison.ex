@@ -16,12 +16,47 @@ defmodule Telepoison do
   alias HTTPoison.Request
   alias OpenTelemetry.Tracer
 
-  @doc """
-  Setups the opentelemetry instrumentation for Telepoison
+  @doc ~S"""
+  Configures Telepoison using the provided `opts` `Keyword list`.
+  You should call this function within your application startup, before Telepoison is used.
 
-  You should call this method on your application startup, before Telepoison is used.
+  Using the `:infer_route` option, you can customise the URL resource route inference procedure
+  that is used to set the `http.route` Open Telemetry metadata attribute.
+
+  If a function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) is provided
+  then that function is used to determine the inference.
+
+  If no value is provided then the out of the box, conservative inference provided by
+  `Telepoison.URI.infer_route_from_request/1` is used to determine the inference.
+
+  This can be overridden per each call to `Telepoison.request/1`.
+
+    ## Examples
+
+      iex> Telepoison.setup()
+      :ok
+
+      iex> infer_fn = fn
+      ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
+      ...> end
+      iex> Telepoison.setup(infer_route: infer_fn)
+      :ok
+
   """
-  def setup do
+  def setup(opts \\ []) do
+    Agent.start_link(
+      fn ->
+        case Keyword.get(opts, :infer_route) do
+          nil ->
+            {:ok, &Telepoison.URI.infer_route_from_request/1}
+
+          infer_fn when is_function(infer_fn, 1) ->
+            {:ok, infer_fn}
+        end
+      end,
+      name: __MODULE__
+    )
+
     :ok
   end
 
@@ -35,15 +70,94 @@ defmodule Telepoison do
     :otel_propagator_text_map.inject(headers)
   end
 
+  @doc ~S"""
+  Performs a request using Telepoison with the provided `t:HTTPoison.Request/0` `request`.
+
+  Depending on configuration passed to `Telepoison.setup/1` and whether or not the `:ot_resource_route`
+  option is set to `:infer` (provided as a part of the `t:HTTPoison.Request/0` `options` `Keyword list`)
+  this may attempt to automatically set the `http.route` Open Telemetry metadata attribute by obtaining
+  the first segment of the `t:HTTPoison.Request/0` `url` (since this part typically does not contain dynamic data)
+
+  If this behavior is not desirable, it can be set directly as a string or a function
+  with an arity of 1 (the `t:HTTPoison.Request/0` `request`) by using the aforementioned `:ot_resource_route` option.
+
+    ## Examples
+
+      iex> Telepoison.setup()
+      iex> request = %HTTPoison.Request{
+      ...> method: :post,
+      ...> url: "https://www.example.com/users/edit/2",
+      ...> body: ~s({"foo": 3}),
+      ...> headers: [{"Accept", "application/json"}]}
+      iex> Telepoison.request(request)
+
+      iex> Telepoison.setup()
+      iex> request = %HTTPoison.Request{
+      ...> method: :post,
+      ...> url: "https://www.example.com/users/edit/2",
+      ...> body: ~s({"foo": 3}),
+      ...> headers: [{"Accept", "application/json"}],
+      ...> options: [ot_resource_route: :infer]}
+      iex> Telepoison.request(request)
+
+      iex> Telepoison.setup()
+      iex> resource_route = "/users/edit/"
+      iex> request = %HTTPoison.Request{
+      ...> method: :post,
+      ...> url: "https://www.example.com/users/edit/2",
+      ...> body: ~s({"foo": 3}),
+      ...> headers: [{"Accept", "application/json"}],
+      ...> options: [ot_resource_route: resource_route]}
+      iex> Telepoison.request(request)
+
+      iex> Telepoison.setup()
+      iex> infer_fn = fn
+      ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
+      ...> end
+      iex> request = %HTTPoison.Request{
+      ...> method: :post,
+      ...> url: "https://www.example.com/users/edit/2",
+      ...> body: ~s({"foo": 3}),
+      ...> headers: [{"Accept", "application/json"}],
+      ...> options: [ot_resource_route: infer_fn]}
+      iex> Telepoison.request(request)
+
+  """
   def request(%Request{options: opts} = request) do
     save_parent_ctx()
+
     span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
+
+    resource_route =
+      case Keyword.get(opts, :ot_resource_route) do
+        route when is_binary(route) ->
+          route
+
+        infer_fn when is_function(infer_fn, 1) ->
+          infer_fn.(request)
+
+        :infer ->
+          Agent.get(
+            __MODULE__,
+            fn
+              {:ok, infer_fn} when is_function(infer_fn, 1) ->
+                infer_fn.(request)
+            end
+          )
+
+        _ ->
+          nil
+      end
 
     attributes =
       [
         {"http.method", request.method |> Atom.to_string() |> String.upcase()},
         {"http.url", request.url}
-      ] ++ Keyword.get(opts, :ot_attributes, [])
+      ] ++
+        Keyword.get(opts, :ot_attributes, []) ++
+        if resource_route != nil,
+          do: [{"http.route", resource_route}],
+          else: []
 
     new_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: attributes})
     Tracer.set_current_span(new_ctx)
