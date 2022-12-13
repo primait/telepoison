@@ -38,8 +38,8 @@ defmodule TelepoisonTest do
   test "additional span attributes can be passed to Telepoison invocation" do
     Telepoison.get!("http://localhost:8000", [], ot_attributes: [{"app.callname", "mariorossi"}])
 
-    assert_receive {:span, span(attributes: attributes)}, 1000
-    assert {"app.callname", "mariorossi"} in elem(attributes, 4)
+    assert_receive {:span, span(attributes: {:attributes, _, _, _, attributes})}, 1000
+    assert {"app.callname", "mariorossi"} in attributes
   end
 
   describe "parent span is not affected" do
@@ -56,7 +56,7 @@ defmodule TelepoisonTest do
     test "with an nxdomain request" do
       Tracer.with_span "parent" do
         pre_request_ctx = Tracer.current_span_ctx()
-        Telepoison.get("http://localghost:8000")
+        Telepoison.get("http://domain.invalid:8000")
 
         post_request_ctx = Tracer.current_span_ctx()
         assert post_request_ctx == pre_request_ctx
@@ -79,7 +79,7 @@ defmodule TelepoisonTest do
     end
 
     test "HTTP nxdomain errors" do
-      {:error, %HTTPoison.Error{reason: expected_reason}} = Telepoison.get("http://localghost:8001")
+      {:error, %HTTPoison.Error{reason: expected_reason}} = Telepoison.get("http://domain.invalid:8001")
 
       assert_receive {:span, span(status: {:status, :error, recorded_reason})}
       assert inspect(expected_reason) == recorded_reason
