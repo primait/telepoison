@@ -78,13 +78,6 @@ defmodule TelepoisonTest do
     end
   end
 
-  test "additional span attributes can be passed to Telepoison invocation" do
-    Telepoison.get!("http://localhost:8000", [], ot_attributes: [{"app.callname", "mariorossi"}])
-
-    assert_receive {:span, span(attributes: {:attributes, _, _, _, attributes})}, 1000
-    assert {"app.callname", "mariorossi"} in attributes
-  end
-
   describe "parent span is not affected" do
     test "with a successful request" do
       Tracer.with_span "parent" do
@@ -132,27 +125,6 @@ defmodule TelepoisonTest do
       {:error, %HTTPoison.Error{reason: expected_reason}} = Telepoison.get("https://localhost:8000")
       assert_receive {:span, span(status: {:status, :error, recorded_reason})}
       assert inspect(expected_reason) == recorded_reason
-    end
-  end
-
-  describe "traceparent header is injected" do
-    test "when no headers" do
-      %HTTPoison.Response{request: %{headers: headers}} = Telepoison.get!("http://localhost:8000")
-      assert "traceparent" in Enum.map(headers, &elem(&1, 0))
-    end
-
-    test "when list headers" do
-      %HTTPoison.Response{request: %{headers: headers}} =
-        Telepoison.get!("http://localhost:8000", [{"Accept", "application/json"}])
-
-      assert "traceparent" in Enum.map(headers, &elem(&1, 0))
-    end
-
-    test "to user-supplied map headers" do
-      %HTTPoison.Response{request: %{headers: headers}} =
-        Telepoison.get!("http://localhost:8000", %{"Accept" => "application/json"})
-
-      assert "traceparent" in Enum.map(headers, &elem(&1, 0))
     end
   end
 
