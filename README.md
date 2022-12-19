@@ -102,10 +102,10 @@ Telepoison.get!(
 ```
 
 In the example above:
-* `Telepoison.setup/1` is called with the `:infer_route` `Keyword list` option set to a function which takes a `%HTTPoison.Request/0` argument, returning the path of the request URL
+* `Telepoison.setup/1` is called with no `Keyword list` options
 * `"my secret path"` is passed as the value for `:ot_resource_route` `Keyword list` option
 
-Given the above, the `http.route` attribute will be inferred as *my secret path*
+Given the above, the `http.route` attribute will be set as *my secret path*
 
 ## How it works
 
