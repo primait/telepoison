@@ -159,18 +159,39 @@ defmodule Telepoison do
           do: [{"http.route", resource_route}],
           else: []
 
-    new_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: attributes})
-    Tracer.set_current_span(new_ctx)
+    request_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: attributes})
+    Tracer.set_current_span(request_ctx)
 
-    super(request)
+    result = super(request)
+
+    if Tracer.current_span_ctx() == request_ctx do
+      case result do
+        {:error, %{reason: reason}} ->
+          Tracer.set_status(:error, inspect(reason))
+          end_span()
+
+        _ ->
+          :ok
+      end
+    end
+
+    result
   end
 
   def process_response_status_code(status_code) do
     # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
+    if status_code >= 400 do
+      Tracer.set_status(:error, "")
+    end
+
     Tracer.set_attribute("http.status_code", status_code)
+    end_span()
+    status_code
+  end
+
+  defp end_span do
     Tracer.end_span()
     restore_parent_ctx()
-    status_code
   end
 
   def compute_default_span_name(request) do
