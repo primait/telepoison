@@ -1,9 +1,11 @@
 defmodule TelepoisonTest do
   alias Telepoison
+  alias OpenTelemetry.Tracer
   use ExUnit.Case
 
   doctest Telepoison
 
+  require OpenTelemetry.Tracer
   require Record
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
@@ -73,6 +75,56 @@ defmodule TelepoisonTest do
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"http.route", "/user/edit/24"})
+    end
+  end
+
+  describe "parent span is not affected" do
+    test "with a successful request" do
+      Tracer.with_span "parent" do
+        pre_request_ctx = Tracer.current_span_ctx()
+        Telepoison.get("http://localhost:8000")
+
+        post_request_ctx = Tracer.current_span_ctx()
+        assert post_request_ctx == pre_request_ctx
+      end
+    end
+
+    test "with an nxdomain request" do
+      Tracer.with_span "parent" do
+        pre_request_ctx = Tracer.current_span_ctx()
+        Telepoison.get("http://domain.invalid:8000")
+
+        post_request_ctx = Tracer.current_span_ctx()
+        assert post_request_ctx == pre_request_ctx
+      end
+    end
+  end
+
+  describe "span_status is set to error for" do
+    test "status codes >= 400" do
+      Telepoison.get!("http://localhost:8000/status/400")
+
+      assert_receive {:span, span(status: {:status, :error, ""})}
+    end
+
+    test "HTTP econnrefused errors" do
+      {:error, %HTTPoison.Error{reason: expected_reason}} = Telepoison.get("http://localhost:8001")
+
+      assert_receive {:span, span(status: {:status, :error, recorded_reason})}
+      assert inspect(expected_reason) == recorded_reason
+    end
+
+    test "HTTP nxdomain errors" do
+      {:error, %HTTPoison.Error{reason: expected_reason}} = Telepoison.get("http://domain.invalid:8001")
+
+      assert_receive {:span, span(status: {:status, :error, recorded_reason})}
+      assert inspect(expected_reason) == recorded_reason
+    end
+
+    test "HTTP tls errors" do
+      {:error, %HTTPoison.Error{reason: expected_reason}} = Telepoison.get("https://localhost:8000")
+      assert_receive {:span, span(status: {:status, :error, recorded_reason})}
+      assert inspect(expected_reason) == recorded_reason
     end
   end
 
