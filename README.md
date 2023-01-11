@@ -47,6 +47,8 @@ If the value is a string or an function with an arity of 1 (the `t:HTTPoison.Req
 
 If `:infer` is provided, then the function discussed within the [Configuration](#Configuration) section is used to set the attribute
 
+If the atom `:ignore` is provided then the `http.route` attribute is ignored entirely
+
 **It is highly recommended** to supply the `:ot_resource_route` explicitly as either a string or a function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) 
 
 ## Examples
@@ -106,6 +108,22 @@ In the example above:
 * `"my secret path"` is passed as the value for `:ot_resource_route` `Keyword list` option
 
 Given the above, the `http.route` attribute will be set as *my secret path*
+
+```elixir
+Telepoison.setup()
+
+Telepoison.get!(
+  "https://www.example.com/user/list",
+  [],
+  ot_resource_route: :ignore
+)
+```
+
+In the example above:
+* `Telepoison.setup/1` is called with no `Keyword list` options
+* `:ignore` is passed as the value for `:ot_resource_route` `Keyword list` option
+
+Given the above, the `http.route` attribute will not be set to any value
 
 ## How it works
 

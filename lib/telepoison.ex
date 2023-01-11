@@ -81,6 +81,8 @@ defmodule Telepoison do
   If this behavior is not desirable, it can be set directly as a string or a function
   with an arity of 1 (the `t:HTTPoison.Request/0` `request`) by using the aforementioned `:ot_resource_route` option.
 
+  It can also be circumvented entirely by suppling `:ignore`  instead.
+
     ## Examples
 
       iex> Telepoison.setup()
@@ -120,6 +122,15 @@ defmodule Telepoison do
       ...> body: ~s({"foo": 3}),
       ...> headers: [{"Accept", "application/json"}],
       ...> options: [ot_resource_route: infer_fn]}
+      iex> Telepoison.request(request)
+
+      iex> Telepoison.setup()
+      iex> request = %HTTPoison.Request{
+      ...> method: :post,
+      ...> url: "https://www.example.com/users/edit/2",
+      ...> body: ~s({"foo": 3}),
+      ...> headers: [{"Accept", "application/json"}],
+      ...> options: [ot_resource_route: :ignore]}
       iex> Telepoison.request(request)
 
   """
