@@ -129,7 +129,7 @@ defmodule Telepoison do
     span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
 
     resource_route =
-      case Keyword.get(opts, :ot_resource_route) do
+      case Keyword.get(opts, :ot_resource_route, :ignore) do
         route when is_binary(route) ->
           route
 
@@ -145,8 +145,12 @@ defmodule Telepoison do
             end
           )
 
-        _ ->
+        :ignore ->
           nil
+
+        _ ->
+          raise ArgumentError,
+                "The :ot_resource_route keyword option value must either be a binary or the :infer or :ignore atom"
       end
 
     attributes =
