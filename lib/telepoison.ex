@@ -215,7 +215,7 @@ defmodule Telepoison do
 
       _ ->
         raise ArgumentError,
-              "The :ot_resource_route keyword option value must either be a binary or the :infer or :ignore atom"
+              "The :ot_resource_route keyword option value must either be a binary, a function with an arity of 1 or the :infer or :ignore atom"
     end
   end
 end
