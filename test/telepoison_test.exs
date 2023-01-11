@@ -76,6 +76,30 @@ defmodule TelepoisonTest do
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"http.route", "/user/edit/24"})
     end
+
+    test "resource route inferrence can be explicitly ignored" do
+      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :ignore)
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      refute confirm_http_route_attribute(attributes)
+    end
+
+    test "resource route inferrence can be implicitly ignored" do
+      Telepoison.get!("http://localhost:8000/user/edit/24")
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      refute confirm_http_route_attribute(attributes)
+    end
+
+    test "resource route inferrence fails if an incorrect value is passed to the Telepoison invocation" do
+      assert_raise(ArgumentError, fn ->
+        Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: nil)
+      end)
+
+      assert_raise(ArgumentError, fn ->
+        Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: 1)
+      end)
+    end
   end
 
   describe "parent span is not affected" do
@@ -135,7 +159,7 @@ defmodule TelepoisonTest do
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"http.route", "/user/:subpath"})
+      assert confirm_http_route_attribute(attributes, "/user/:subpath")
     end
 
     test "resource route can be implicitly inferred by Telepoison invocation via a function passed to Telepoison.setup/1" do
@@ -148,10 +172,10 @@ defmodule TelepoisonTest do
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"http.route", "/user/edit/24"})
+      assert confirm_http_route_attribute(attributes, "/user/edit/24")
     end
 
-    test "implicit resource route inferrence can be overridden with a function passed to the Telepoison invocation" do
+    test "implicit resource route inference can be overridden with a function passed to the Telepoison invocation" do
       setup_infer_fn = fn
         %HTTPoison.Request{} = request -> URI.parse(request.url).path
       end
@@ -163,10 +187,10 @@ defmodule TelepoisonTest do
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: invocation_infer_fn)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"http.route", "test"})
+      assert confirm_http_route_attribute(attributes, "test")
     end
 
-    test "implicit resource route inferrence can be overriden with a string passed to the Telepoison invocation" do
+    test "implicit resource route inference can be overridden with a string passed to the Telepoison invocation" do
       setup_infer_fn = fn
         %HTTPoison.Request{} = request -> URI.parse(request.url).path
       end
@@ -176,7 +200,7 @@ defmodule TelepoisonTest do
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: "test")
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"http.route", "test"})
+      assert confirm_http_route_attribute(attributes, "test")
     end
   end
 
@@ -195,5 +219,13 @@ defmodule TelepoisonTest do
     |> Enum.any?(fn map ->
       attributes_to_confirm in map
     end)
+  end
+
+  defp confirm_http_route_attribute(attributes, value) do
+    confirm_attributes(attributes, {"http.route", value})
+  end
+
+  defp confirm_http_route_attribute(attributes) do
+    confirm_http_route_attribute(attributes, "")
   end
 end
