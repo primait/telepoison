@@ -140,11 +140,13 @@ defmodule Telepoison do
     span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
 
     resource_route = get_resource_route(opts, request)
+    %URI{host: host} = request.url |> process_request_url() |> URI.parse()
 
     attributes =
       [
         {"http.method", request.method |> Atom.to_string() |> String.upcase()},
-        {"http.url", request.url}
+        {"http.url", request.url},
+        {"net.peer.name", host}
       ] ++
         Keyword.get(opts, :ot_attributes, []) ++
         if resource_route != nil,
