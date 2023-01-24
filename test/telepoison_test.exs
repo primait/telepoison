@@ -29,10 +29,11 @@ defmodule TelepoisonTest do
       assert_receive {:span, span(attributes: attributes_record)}
       attributes = elem(attributes_record, 4)
 
-      assert ["http.method", "http.status_code", "http.url"] ==
+      assert ["http.method", "http.status_code", "http.url", "net.peer.name"] ==
                attributes |> Map.keys() |> Enum.sort()
 
       assert {"http.method", "GET"} in attributes
+      assert {"net.peer.name", "localhost"} in attributes
     end
 
     test "traceparent header is injected when no headers" do
