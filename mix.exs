@@ -27,7 +27,7 @@ defmodule Telepoison.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:httpoison, "~> 2.0"},
+      {:httpoison, "~> 1.6 or ~> 2.0"},
       {:opentelemetry_api, "~> 1.0"}
     ] ++ dev_deps()
   end
