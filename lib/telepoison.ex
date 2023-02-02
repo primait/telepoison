@@ -16,7 +16,7 @@ defmodule Telepoison do
   alias HTTPoison.Request
   alias OpenTelemetry.Tracer
 
-  @default_attributes [:env, :service, :service_name]
+  @default_attributes [:env, :service, :"service.name"]
 
   @doc ~S"""
   Configures Telepoison using the provided `opts` `Keyword list`.
