@@ -16,6 +16,8 @@ defmodule Telepoison do
   alias HTTPoison.Request
   alias OpenTelemetry.Tracer
 
+  @default_attributes [:env, :service, :service_name]
+
   @doc ~S"""
   Configures Telepoison using the provided `opts` `Keyword list`.
   You should call this function within your application startup, before Telepoison is used.
@@ -46,13 +48,29 @@ defmodule Telepoison do
   def setup(opts \\ []) do
     Agent.start_link(
       fn ->
-        case Keyword.get(opts, :infer_route) do
-          nil ->
-            {:ok, &Telepoison.URI.infer_route_from_request/1}
+        infer_fn =
+          case Keyword.get(opts, :infer_route) do
+            nil ->
+              &Telepoison.URI.infer_route_from_request/1
 
-          infer_fn when is_function(infer_fn, 1) ->
-            {:ok, infer_fn}
-        end
+            infer_fn when is_function(infer_fn, 1) ->
+              infer_fn
+          end
+
+        defaults =
+          @default_attributes
+          |> Enum.each(fn key ->
+            case Keyword.get(opts, key) do
+              value when is_binary(value) ->
+                {key, value}
+
+              _ ->
+                nil
+            end
+          end)
+          |> Enum.filter(&is_nil/1)
+
+        {infer_fn, defaults}
       end,
       name: __MODULE__
     )
@@ -139,19 +157,12 @@ defmodule Telepoison do
 
     span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
 
-    resource_route = get_resource_route(opts, request)
     %URI{host: host} = request.url |> process_request_url() |> URI.parse()
 
     attributes =
-      [
-        {"http.method", request.method |> Atom.to_string() |> String.upcase()},
-        {"http.url", request.url},
-        {"net.peer.name", host}
-      ] ++
-        Keyword.get(opts, :ot_attributes, []) ++
-        if resource_route != nil,
-          do: [{"http.route", resource_route}],
-          else: []
+      get_standard_attributes(request, host) ++
+        get_attributes(opts) ++
+        get_resource_route(opts, request)
 
     request_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: attributes})
     Tracer.set_current_span(request_ctx)
@@ -206,29 +217,66 @@ defmodule Telepoison do
     Tracer.set_current_span(ctx)
   end
 
-  defp get_resource_route(opts, request) do
-    case Keyword.get(opts, :ot_resource_route, :ignore) do
-      route when is_binary(route) ->
-        route
+  defp get_standard_attributes(request, host) do
+    [
+      {"http.method",
+       request.method
+       |> Atom.to_string()
+       |> String.upcase()},
+      {"http.url", request.url},
+      {"net.peer.name", host}
+    ]
+  end
 
-      infer_fn when is_function(infer_fn, 1) ->
-        infer_fn.(request)
-
-      :infer ->
-        Agent.get(
-          __MODULE__,
-          fn
-            {:ok, infer_fn} when is_function(infer_fn, 1) ->
-              infer_fn.(request)
-          end
-        )
-
-      :ignore ->
-        nil
+  defp get_attributes(opts) do
+    case get_defaults() do
+      {_, defaults} when is_list(defaults) ->
+        Keyword.get(opts, :ot_attributes, [])
+        |> then(fn attributes ->
+          Keyword.merge(attributes, defaults)
+        end)
 
       _ ->
-        raise ArgumentError,
-              "The :ot_resource_route keyword option value must either be a binary, a function with an arity of 1 or the :infer or :ignore atom"
+        []
     end
+  end
+
+  defp get_resource_route(opts, request) do
+    resource_route =
+      case Keyword.get(opts, :ot_resource_route, :ignore) do
+        route when is_binary(route) ->
+          route
+
+        infer_fn when is_function(infer_fn, 1) ->
+          infer_fn.(request)
+
+        :infer ->
+          case get_defaults() do
+            {infer_fn, _} when is_function(infer_fn, 1) ->
+              infer_fn.(request)
+
+            _ ->
+              raise ArgumentError,
+                    "The configured :infer_route keyword option value must be a function with an arity of 1"
+          end
+
+        :ignore ->
+          nil
+
+        _ ->
+          raise ArgumentError,
+                "The :ot_resource_route keyword option value must either be a binary, a function with an arity of 1 or the :infer or :ignore atom"
+      end
+
+    if resource_route != nil,
+      do: [{"http.route", resource_route}],
+      else: []
+  end
+
+  defp get_defaults() do
+    Agent.get(
+      __MODULE__,
+      fn defaults -> defaults end
+    )
   end
 end
