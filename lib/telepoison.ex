@@ -231,10 +231,8 @@ defmodule Telepoison do
   defp get_attributes(opts) do
     case get_defaults() do
       {_, defaults} when is_list(defaults) ->
-        Keyword.get(opts, :ot_attributes, [])
-        |> then(fn attributes ->
-          Keyword.merge(attributes, defaults)
-        end)
+        attributes = Keyword.get(opts, :ot_attributes, [])
+        Keyword.merge(attributes, defaults)
 
       _ ->
         []
