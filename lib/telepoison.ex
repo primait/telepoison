@@ -58,13 +58,9 @@ defmodule Telepoison do
         ot_attributes =
           case Keyword.get(opts, :ot_attributes) do
             ot_attributes when is_list(ot_attributes) ->
-              ot_attributes
-              |> Enum.map(fn
+              Enum.map(ot_attributes, fn
                 {key, value} when is_binary(key) and is_binary(value) ->
                   {key, value}
-
-                {key, value} when is_atom(key) and is_binary(value) ->
-                  {Atom.to_string(key), value}
 
                 _ ->
                   nil
@@ -178,8 +174,6 @@ defmodule Telepoison do
         get_ot_attributes(opts) ++
         resource_route.()
 
-    IO.inspect(ot_attributes, label: "Here!")
-
     request_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: ot_attributes})
     Tracer.set_current_span(request_ctx)
 
@@ -245,18 +239,12 @@ defmodule Telepoison do
   end
 
   defp get_ot_attributes(opts) do
-    get_defaults(:ot_attributes)
-    |> merge_ot_attributes()
-    |> merge_ot_attributes(Keyword.get(opts, :ot_attributes, []))
+    default_ot_attributes = get_defaults(:ot_attributes)
+
+    default_ot_attributes
+    |> Enum.concat(Keyword.get(opts, :ot_attributes, []))
+    |> Enum.reduce(%{}, fn {key, value}, acc -> Map.put(acc, key, value) end)
     |> Enum.into([], fn {key, value} -> {key, value} end)
-  end
-
-  defp merge_ot_attributes(ot_attributes) do
-    merge_ot_attributes(%{}, ot_attributes)
-  end
-
-  defp merge_ot_attributes(map, ot_attributes) do
-    for {key, value} <- ot_attributes, into: map, do: {to_string(key), value}
   end
 
   defp get_resource_route([ot_resource_route: route], _) when is_binary(route) do

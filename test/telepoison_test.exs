@@ -162,15 +162,6 @@ defmodule TelepoisonTest do
   end
 
   describe "Telepoison setup with additional configuration" do
-    test "default attributes can be set via a keyword list passed to Telepoison.setup/1" do
-      Telepoison.setup(ot_attributes: [test_attribute: "test"])
-
-      Telepoison.get!("http://localhost:8000/user/edit/24")
-
-      assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"test_attribute", "test"})
-    end
-
     test "default attributes can be set via a two element tuple list passed to Telepoison.setup/1" do
       Telepoison.setup(ot_attributes: [{"test_attribute", "test"}])
 
@@ -180,10 +171,10 @@ defmodule TelepoisonTest do
       assert confirm_attributes(attributes, {"test_attribute", "test"})
     end
 
-    test "default attributes can be overridden via a keyword list passed to the Telepoison.invocation" do
-      Telepoison.setup(ot_attributes: [test_attribute: "test"])
+    test "default attributes can be overridden via a two element tuple list passed to the Telepoison.invocation" do
+      Telepoison.setup(ot_attributes: [{"test_attribute", "test"}])
 
-      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_attributes: [test_attribute: "overridden"])
+      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_attributes: [{"test_attribute", "overridden"}])
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"test_attribute", "overridden"})
