@@ -171,13 +171,27 @@ defmodule TelepoisonTest do
       assert confirm_attributes(attributes, {"test_attribute", "test"})
     end
 
-    test "default attributes can be overridden via a two element tuple list passed to the Telepoison.invocation" do
+    test "default attributes can be overridden via a two element tuple list passed to the Telepoison invocation" do
       Telepoison.setup(ot_attributes: [{"test_attribute", "test"}])
 
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_attributes: [{"test_attribute", "overridden"}])
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"test_attribute", "overridden"})
+    end
+
+    test "default attributes can be combined with attributes passed to the Telepoison invocation" do
+      Telepoison.setup(ot_attributes: [{"test_attribute", "test"}, {"test_attribute_overridden", "test"}])
+
+      Telepoison.get!("http://localhost:8000/user/edit/24", [],
+        ot_attributes: [{"another_test_attribute", "another test"}, {"test_attribute_overridden", "overridden"}]
+      )
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+
+      assert confirm_attributes(attributes, {"test_attribute", "test"})
+      assert confirm_attributes(attributes, {"another_test_attribute", "another test"})
+      assert confirm_attributes(attributes, {"test_attribute_overridden", "overridden"})
     end
 
     test "resource route can be implicitly inferred by Telepoison invocation" do

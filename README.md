@@ -24,13 +24,24 @@ Telepoison.get!(url, headers, opts)
 
 ## Configuration
 
-`Telepoison.setup/1` takes a `Keyword list` that can configure how the `http.route` Open Telemetry metadata will be set per request using the `:infer_route` option
+`Telepoison.setup/1` takes a `Keyword list` that can configure:
 
-* If no value is provided then the out of the box, conservative inference provided by `Telepoison.URI.infer_route_from_request/1` is used to determine the inference
+* What default Open Telemetry metadata attributes will be sent per request using the `:ot_attributes` option
 
-* If a function with an arity of 1 (the argument given being the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference
+If no value is provided, then no default Open Telemetry metadata attributes will sent per request by default
 
-This can be overridden per each call to Telepoison functions that wrap `Telepoison.request/1`, such as `Telepoison.get/3`, `Telepoison.get!/3`, `Telepoison.post/3` etc.
+If a `list` of two element `tuple`s (both elements of `String.t()`) is provided, then these will form the default Open Telemetry metadata attributes
+sent per request
+
+The first element of a provided `tuple` is the attribute name, e.g. `service.name`, whilst the second element is the attribute value, e.g. "shoppingcart"
+
+* How the `http.route` Open Telemetry metadata will be set per request using the `:infer_route` option
+
+If no value is provided then the out of the box, conservative inference provided by `Telepoison.URI.infer_route_from_request/1` is used to determine the inference
+
+If a function with an arity of 1 (the argument given being the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference
+
+Both of these can be overridden per each call to Telepoison functions that wrap `Telepoison.request/1`, such as `Telepoison.get/3`, `Telepoison.get!/3`, `Telepoison.post/3` etc.
 
 See here for [examples](#Examples)
 
@@ -54,6 +65,43 @@ If the atom `:ignore` is provided then the `http.route` attribute is ignored ent
 ## Examples
 
 In the below examples, `Telepoison.get!/3` is used for the sake of simplicity but other functions derived from `Telepoison.request/1` can be used
+
+```elixir
+Telepoison.setup(ot_attributes: [{"service.name", "users"}])
+
+Telepoison.get!(
+  "https://www.example.com/user/list",
+  [],
+  ot_span_name: "list example users",
+  ot_attributes: [{"example.language", "en"}],
+  ot_resource_route: :infer
+)
+```
+
+In the example above:
+* `Telepoison.setup/1` is called with `{"service.name", "users"}` as the value for the `:ot_attributes` `Keyword list` option
+* `:infer` is passed as the value for the `:ot_resource_route` `Keyword list` option
+
+Given the above, the `service.name` attribute will be set to "users" and the `http.route` attribute will be inferred as */user/:subpath*
+
+```elixir
+Telepoison.setup(ot_attributes: [{"service.name", "users"}])
+
+Telepoison.get!(
+  "https://www.example.com/user/list",
+  [],
+  ot_span_name: "list example users",
+  ot_attributes: [{"example.language", "en"}, {"service.name", "userslist"}],
+  ot_resource_route: :infer
+)
+```
+
+In the example above:
+* `Telepoison.setup/1` is called with `{"service.name", "users"}` as the value for the `:ot_attributes` `Keyword list` option
+* A `{"service.name", "userslist"}` `tuple` is provided to the `:ot_attributes` `Keyword list` option
+* `:infer` is passed as the value for the `:ot_resource_route` `Keyword list` option
+
+Given the above, the `service.name` attribute will be set to "userslist" and the `http.route` attribute will be inferred as */user/:subpath*
 
 ```elixir
 Telepoison.setup()

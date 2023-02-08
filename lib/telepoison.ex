@@ -20,6 +20,12 @@ defmodule Telepoison do
   Configures Telepoison using the provided `opts` `Keyword list`.
   You should call this function within your application startup, before Telepoison is used.
 
+  Using the `:ot_attributes` option, you can set default Open Telemetry metadata attributes
+  to be added to each Telepoison request in the format of a list of two element tuples, with both elements
+  being strings.
+
+  Attributes can be overridden per each call to `Telepoison.request/1`.
+
   Using the `:infer_route` option, you can customise the URL resource route inference procedure
   that is used to set the `http.route` Open Telemetry metadata attribute.
 
@@ -42,38 +48,20 @@ defmodule Telepoison do
       iex> Telepoison.setup(infer_route: infer_fn)
       :ok
 
+      iex> Telepoison.setup(ot_attributes: [{"service.name", "..."}, {"service.namespace", "..."}])
+      :ok
+
+      iex> infer_fn = fn
+      ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
+      ...> end
+      iex> ot_attributes = [{"service.name", "..."}, {"service.namespace", "..."}]
+      iex> Telepoison.setup(infer_fn: infer_fn, ot_attributes: ot_attributes)
+      :ok
+
   """
+  @spec setup(infer_fn: (Request.t() -> String.t()), ot_attributes: [{String.t(), String.t()}]) :: :ok
   def setup(opts \\ []) do
-    Agent.start_link(
-      fn ->
-        infer_fn =
-          case Keyword.get(opts, :infer_route) do
-            nil ->
-              &Telepoison.URI.infer_route_from_request/1
-
-            infer_fn when is_function(infer_fn, 1) ->
-              infer_fn
-          end
-
-        ot_attributes =
-          case Keyword.get(opts, :ot_attributes) do
-            ot_attributes when is_list(ot_attributes) ->
-              Enum.map(ot_attributes, fn
-                {key, value} when is_binary(key) and is_binary(value) ->
-                  {key, value}
-
-                _ ->
-                  nil
-              end)
-
-            _ ->
-              []
-          end
-
-        {infer_fn, ot_attributes}
-      end,
-      name: __MODULE__
-    )
+    Agent.start_link(fn -> set_defaults(opts) end, name: __MODULE__)
 
     :ok
   end
@@ -225,6 +213,34 @@ defmodule Telepoison do
     ctx = Process.get(@ctx_key, :undefined)
     Process.delete(@ctx_key)
     Tracer.set_current_span(ctx)
+  end
+
+  defp set_defaults(opts) do
+    infer_fn =
+      case Keyword.get(opts, :infer_route) do
+        nil ->
+          &Telepoison.URI.infer_route_from_request/1
+
+        infer_fn when is_function(infer_fn, 1) ->
+          infer_fn
+      end
+
+    ot_attributes =
+      case Keyword.get(opts, :ot_attributes) do
+        ot_attributes when is_list(ot_attributes) ->
+          Enum.map(ot_attributes, fn
+            {key, value} when is_binary(key) and is_binary(value) ->
+              {key, value}
+
+            _ ->
+              nil
+          end)
+
+        _ ->
+          []
+      end
+
+    {infer_fn, ot_attributes}
   end
 
   defp get_standard_ot_attributes(request, host) do
