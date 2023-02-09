@@ -20,6 +20,12 @@ defmodule Telepoison do
   Configures Telepoison using the provided `opts` `Keyword list`.
   You should call this function within your application startup, before Telepoison is used.
 
+  Using the `:ot_attributes` option, you can set default Open Telemetry metadata attributes
+  to be added to each Telepoison request in the format of a list of two element tuples, with both elements
+  being strings.
+
+  Attributes can be overridden per each call to `Telepoison.request/1`.
+
   Using the `:infer_route` option, you can customise the URL resource route inference procedure
   that is used to set the `http.route` Open Telemetry metadata attribute.
 
@@ -42,20 +48,20 @@ defmodule Telepoison do
       iex> Telepoison.setup(infer_route: infer_fn)
       :ok
 
-  """
-  def setup(opts \\ []) do
-    Agent.start_link(
-      fn ->
-        case Keyword.get(opts, :infer_route) do
-          nil ->
-            {:ok, &Telepoison.URI.infer_route_from_request/1}
+      iex> Telepoison.setup(ot_attributes: [{"service.name", "..."}, {"service.namespace", "..."}])
+      :ok
 
-          infer_fn when is_function(infer_fn, 1) ->
-            {:ok, infer_fn}
-        end
-      end,
-      name: __MODULE__
-    )
+      iex> infer_fn = fn
+      ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
+      ...> end
+      iex> ot_attributes = [{"service.name", "..."}, {"service.namespace", "..."}]
+      iex> Telepoison.setup(infer_fn: infer_fn, ot_attributes: ot_attributes)
+      :ok
+
+  """
+  @spec setup(infer_fn: (Request.t() -> String.t()), ot_attributes: [{String.t(), String.t()}]) :: :ok
+  def setup(opts \\ []) do
+    Agent.start_link(fn -> set_defaults(opts) end, name: __MODULE__)
 
     :ok
   end
@@ -139,21 +145,24 @@ defmodule Telepoison do
 
     span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
 
-    resource_route = get_resource_route(opts, request)
     %URI{host: host} = request.url |> process_request_url() |> URI.parse()
 
-    attributes =
-      [
-        {"http.method", request.method |> Atom.to_string() |> String.upcase()},
-        {"http.url", request.url},
-        {"net.peer.name", host}
-      ] ++
-        Keyword.get(opts, :ot_attributes, []) ++
-        if resource_route != nil,
-          do: [{"http.route", resource_route}],
-          else: []
+    resource_route = fn ->
+      case get_resource_route(opts, request) do
+        resource_route when is_binary(resource_route) ->
+          [{"http.route", resource_route}]
 
-    request_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: attributes})
+        nil ->
+          []
+      end
+    end
+
+    ot_attributes =
+      get_standard_ot_attributes(request, host) ++
+        get_ot_attributes(opts) ++
+        resource_route.()
+
+    request_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: ot_attributes})
     Tracer.set_current_span(request_ctx)
 
     result = super(request)
@@ -206,29 +215,103 @@ defmodule Telepoison do
     Tracer.set_current_span(ctx)
   end
 
-  defp get_resource_route(opts, request) do
-    case Keyword.get(opts, :ot_resource_route, :ignore) do
-      route when is_binary(route) ->
-        route
+  defp set_defaults(opts) do
+    infer_fn =
+      case Keyword.get(opts, :infer_route) do
+        nil ->
+          &Telepoison.URI.infer_route_from_request/1
 
-      infer_fn when is_function(infer_fn, 1) ->
-        infer_fn.(request)
+        infer_fn when is_function(infer_fn, 1) ->
+          infer_fn
+      end
 
-      :infer ->
-        Agent.get(
-          __MODULE__,
-          fn
-            {:ok, infer_fn} when is_function(infer_fn, 1) ->
-              infer_fn.(request)
-          end
-        )
+    ot_attributes =
+      case Keyword.get(opts, :ot_attributes) do
+        ot_attributes when is_list(ot_attributes) ->
+          Enum.map(ot_attributes, fn
+            {key, value} when is_binary(key) and is_binary(value) ->
+              {key, value}
 
-      :ignore ->
-        nil
+            _ ->
+              nil
+          end)
 
-      _ ->
-        raise ArgumentError,
-              "The :ot_resource_route keyword option value must either be a binary, a function with an arity of 1 or the :infer or :ignore atom"
-    end
+        _ ->
+          []
+      end
+
+    {infer_fn, ot_attributes}
+  end
+
+  defp get_standard_ot_attributes(request, host) do
+    [
+      {"http.method",
+       request.method
+       |> Atom.to_string()
+       |> String.upcase()},
+      {"http.url", request.url},
+      {"net.peer.name", host}
+    ]
+  end
+
+  defp get_ot_attributes(opts) do
+    default_ot_attributes = get_defaults(:ot_attributes)
+
+    default_ot_attributes
+    |> Enum.concat(Keyword.get(opts, :ot_attributes, []))
+    |> Enum.reduce(%{}, fn {key, value}, acc -> Map.put(acc, key, value) end)
+    |> Enum.into([], fn {key, value} -> {key, value} end)
+  end
+
+  defp get_resource_route([ot_resource_route: route], _) when is_binary(route) do
+    route
+  end
+
+  defp get_resource_route([ot_resource_route: infer_fn], request) when is_function(infer_fn, 1) do
+    infer_fn.(request)
+  end
+
+  defp get_resource_route([ot_resource_route: :infer], request) do
+    get_defaults(:infer_fn).(request)
+  end
+
+  defp get_resource_route([ot_resource_route: :ignore], _) do
+    nil
+  end
+
+  defp get_resource_route([ot_resource_route: _], _) do
+    raise ArgumentError,
+          "The :ot_resource_route keyword option value must either be a binary, a function with an arity of 1 or the :infer or :ignore atom"
+  end
+
+  defp get_resource_route(_, _) do
+    nil
+  end
+
+  defp get_defaults(:infer_fn) do
+    Agent.get(
+      __MODULE__,
+      fn
+        {infer_fn, _} when is_function(infer_fn, 1) ->
+          infer_fn
+
+        _ ->
+          raise ArgumentError,
+                "The configured :infer_route keyword option value must be a function with an arity of 1"
+      end
+    )
+  end
+
+  defp get_defaults(:ot_attributes) do
+    Agent.get(
+      __MODULE__,
+      fn
+        {_, ot_attributes} when is_list(ot_attributes) ->
+          ot_attributes
+
+        _ ->
+          []
+      end
+    )
   end
 end
