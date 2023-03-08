@@ -17,6 +17,12 @@ defmodule Telepoison do
   alias HTTPoison.Request
   alias OpenTelemetry.Tracer
 
+  @http_url Atom.to_string(Conventions.http_url())
+  @http_method Atom.to_string(Conventions.http_method())
+  @http_route Atom.to_string(Conventions.http_route())
+  @http_status_code Atom.to_string(Conventions.http_status_code())
+  @net_peer_name Atom.to_string(Conventions.net_peer_name())
+
   @doc ~S"""
   Configures Telepoison using the provided `opts` `Keyword list`.
   You should call this function within your application startup, before Telepoison is used.
@@ -151,7 +157,7 @@ defmodule Telepoison do
     resource_route = fn ->
       case get_resource_route(opts, request) do
         resource_route when is_binary(resource_route) ->
-          [{Conventions.http_route(), resource_route}]
+          [{@http_route, resource_route}]
 
         nil ->
           []
@@ -188,7 +194,7 @@ defmodule Telepoison do
       Tracer.set_status(:error, "")
     end
 
-    Tracer.set_attribute(Conventions.http_status_code(), status_code)
+    Tracer.set_attribute(@http_status_code, status_code)
     end_span()
     status_code
   end
@@ -246,12 +252,12 @@ defmodule Telepoison do
 
   defp get_standard_ot_attributes(request, host) do
     [
-      {Conventions.http_method(),
+      {@http_method,
        request.method
        |> Atom.to_string()
        |> String.upcase()},
-      {Conventions.http_url(), request.url},
-      {Conventions.net_peer_name(), host}
+      {@http_url, request.url},
+      {@net_peer_name, host}
     ]
   end
 
