@@ -9,8 +9,9 @@ defmodule Telepoison do
   use HTTPoison.Base
 
   require OpenTelemetry
-  require OpenTelemetry.Tracer
+  require OpenTelemetry.SemanticConventions.Trace, as: Conventions
   require OpenTelemetry.Span
+  require OpenTelemetry.Tracer
   require Record
 
   alias HTTPoison.Request
@@ -150,7 +151,7 @@ defmodule Telepoison do
     resource_route = fn ->
       case get_resource_route(opts, request) do
         resource_route when is_binary(resource_route) ->
-          [{"http.route", resource_route}]
+          [{Conventions.http_route(), resource_route}]
 
         nil ->
           []
@@ -187,7 +188,7 @@ defmodule Telepoison do
       Tracer.set_status(:error, "")
     end
 
-    Tracer.set_attribute("http.status_code", status_code)
+    Tracer.set_attribute(Conventions.http_status_code(), status_code)
     end_span()
     status_code
   end
@@ -245,12 +246,12 @@ defmodule Telepoison do
 
   defp get_standard_ot_attributes(request, host) do
     [
-      {"http.method",
+      {Conventions.http_method(),
        request.method
        |> Atom.to_string()
        |> String.upcase()},
-      {"http.url", request.url},
-      {"net.peer.name", host}
+      {Conventions.http_url(), request.url},
+      {Conventions.net_peer_name(), host}
     ]
   end
 
