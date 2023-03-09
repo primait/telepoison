@@ -204,11 +204,7 @@ defmodule Telepoison do
     restore_parent_ctx()
   end
 
-  def compute_default_span_name(request) do
-    method_str = request.method |> Atom.to_string() |> String.upcase()
-    %URI{authority: authority} = request.url |> process_request_url() |> URI.parse()
-    "#{method_str} #{authority}"
-  end
+  def compute_default_span_name(request), do: request.method |> Atom.to_string() |> String.upcase()
 
   @ctx_key {__MODULE__, :parent_ctx}
   defp save_parent_ctx do
