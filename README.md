@@ -43,7 +43,7 @@ If a function with an arity of 1 (the argument given being the `t:HTTPoison.Requ
 
 Both of these can be overridden per each call to Telepoison functions that wrap `Telepoison.request/1`, such as `Telepoison.get/3`, `Telepoison.get!/3`, `Telepoison.post/3` etc.
 
-See here for [examples](#Examples)
+See here for [examples](#examples)
 
 ## Open Telemetry integration
 
@@ -56,11 +56,11 @@ the `Keyword list` `opts` parameter (or the `t:HTTPoison.Request/0` `Keyword lis
 
 If the value is a string or an function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) that is used to set the attribute
 
-If `:infer` is provided, then the function discussed within the [Configuration](#Configuration) section is used to set the attribute
+If `:infer` is provided, then the function discussed within the [Configuration](#configuration) section is used to set the attribute
 
 If the atom `:ignore` is provided then the `http.route` attribute is ignored entirely
 
-**It is highly recommended** to supply the `:ot_resource_route` explicitly as either a string or a function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) 
+**It is highly recommended** to supply the `:ot_resource_route` explicitly as either a string or a function with an arity of 1 (the `t:HTTPoison.Request/0` `request`)
 
 ## Examples
 
@@ -79,6 +79,7 @@ Telepoison.get!(
 ```
 
 In the example above:
+
 * `Telepoison.setup/1` is called with `{"service.name", "users"}` as the value for the `:ot_attributes` `Keyword list` option
 * `:infer` is passed as the value for the `:ot_resource_route` `Keyword list` option
 
@@ -97,6 +98,7 @@ Telepoison.get!(
 ```
 
 In the example above:
+
 * `Telepoison.setup/1` is called with `{"service.name", "users"}` as the value for the `:ot_attributes` `Keyword list` option
 * A `{"service.name", "userslist"}` `tuple` is provided to the `:ot_attributes` `Keyword list` option
 * `:infer` is passed as the value for the `:ot_resource_route` `Keyword list` option
@@ -116,6 +118,7 @@ Telepoison.get!(
 ```
 
 In the example above:
+
 * `Telepoison.setup/1` is called with no arguments
 * `:infer` is passed as the value for `:ot_resource_route` `Keyword list` option
 
@@ -136,6 +139,7 @@ Telepoison.get!(
 ```
 
 In the example above:
+
 * `Telepoison.setup/1` is called with the `:infer_route` `Keyword list` option set to a function which takes a `%HTTPoison.Request/0` argument, returning the path of the request URL
 * `:infer` is passed as the value for `:ot_resource_route` `Keyword list` option
 
@@ -152,6 +156,7 @@ Telepoison.get!(
 ```
 
 In the example above:
+
 * `Telepoison.setup/1` is called with no `Keyword list` options
 * `"my secret path"` is passed as the value for `:ot_resource_route` `Keyword list` option
 
@@ -168,6 +173,7 @@ Telepoison.get!(
 ```
 
 In the example above:
+
 * `Telepoison.setup/1` is called with no `Keyword list` options
 * `:ignore` is passed as the value for `:ot_resource_route` `Keyword list` option
 
@@ -178,7 +184,7 @@ Given the above, the `http.route` attribute will not be set to any value
 Telepoison, when executing an HTTP request to an external service, creates an OpenTelemetry span, injects
 the [trace context propagation headers](https://www.w3.org/TR/trace-context/) in the request headers, and
 ends the span once the response is received.
-It automatically sets some of the [HTTP span attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md) like `http.status`, `http.host` etc,
+It automatically sets some of the [HTTP span attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md) like `http.status` etc,
 based on the request and response data.
 
 Telepoison by itself is not particularly useful: it becomes useful when used in conjunction with a "server-side"
