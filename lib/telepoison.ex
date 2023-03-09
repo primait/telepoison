@@ -150,7 +150,7 @@ defmodule Telepoison do
   def request(%Request{options: opts} = request) do
     save_parent_ctx()
 
-    span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
+    span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> default_span_name(request) end)
 
     %URI{host: host} = request.url |> process_request_url() |> URI.parse()
 
@@ -204,7 +204,8 @@ defmodule Telepoison do
     restore_parent_ctx()
   end
 
-  def compute_default_span_name(request), do: request.method |> Atom.to_string() |> String.upcase()
+  # see https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#name
+  def default_span_name(request), do: request.method |> Atom.to_string() |> String.upcase()
 
   @ctx_key {__MODULE__, :parent_ctx}
   defp save_parent_ctx do
