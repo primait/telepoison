@@ -253,7 +253,7 @@ defmodule Telepoison do
        request.method
        |> Atom.to_string()
        |> String.upcase()},
-      {@http_url, request.url},
+      {@http_url, strip_uri_credentials(request.url)},
       {@net_peer_name, host}
     ]
   end
@@ -317,5 +317,9 @@ defmodule Telepoison do
           []
       end
     )
+  end
+
+  def strip_uri_credentials(uri) do
+    uri |> URI.parse() |> Map.put(:userinfo, nil) |> Map.put(:authority, nil) |> URI.to_string()
   end
 end

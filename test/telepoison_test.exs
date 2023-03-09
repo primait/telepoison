@@ -55,6 +55,13 @@ defmodule TelepoisonTest do
       assert "traceparent" in Enum.map(headers, &elem(&1, 0))
     end
 
+    test "http.url doesn't contain credentials" do
+      Telepoison.get!("http://user:pass@localhost:8000/user/edit/24")
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      assert confirm_attributes(attributes, {"http.url", "http://localhost:8000/user/edit/24"})
+    end
+
     test "additional span attributes can be passed to Telepoison invocation" do
       Telepoison.get!("http://localhost:8000", [], ot_attributes: [{"app.callname", "mariorossi"}])
 
