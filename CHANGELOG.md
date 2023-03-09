@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New `:ot_attributes` option to set default Open Telemetry metadata attributes to be added to each Telepoison request
+- New otel semantic conventions library to ensure proper conventions are followed
+
+### Changed
+
+- Span name contains `method` only now, as per semantic conventions
+
 ---
 
 ## [1.1.2] - 2023-01-25
