@@ -28,7 +28,8 @@ defmodule Telepoison.MixProject do
   defp deps do
     [
       {:httpoison, "~> 1.6 or ~> 2.0"},
-      {:opentelemetry_api, "~> 1.0"}
+      {:opentelemetry_api, "~> 1.0"},
+      {:opentelemetry_semantic_conventions, "~> 0.2"},
     ] ++ dev_deps()
   end
 

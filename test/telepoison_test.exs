@@ -26,7 +26,7 @@ defmodule TelepoisonTest do
     test "standard http client span attribute are set in span" do
       Telepoison.get!("http://localhost:8000")
 
-      assert_receive {:span, span(attributes: attributes_record)}
+      assert_receive {:span, span(attributes: attributes_record, name: "GET")}
       attributes = elem(attributes_record, 4)
 
       assert ["http.method", "http.status_code", "http.url", "net.peer.name"] ==
@@ -78,21 +78,21 @@ defmodule TelepoisonTest do
       assert confirm_attributes(attributes, {"http.route", "/user/edit/24"})
     end
 
-    test "resource route inferrence can be explicitly ignored" do
+    test "resource route inference can be explicitly ignored" do
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :ignore)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       refute confirm_http_route_attribute(attributes)
     end
 
-    test "resource route inferrence can be implicitly ignored" do
+    test "resource route inference can be implicitly ignored" do
       Telepoison.get!("http://localhost:8000/user/edit/24")
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       refute confirm_http_route_attribute(attributes)
     end
 
-    test "resource route inferrence fails if an incorrect value is passed to the Telepoison invocation" do
+    test "resource route inference fails if an incorrect value is passed to the Telepoison invocation" do
       assert_raise(ArgumentError, fn ->
         Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: nil)
       end)

@@ -9,12 +9,19 @@ defmodule Telepoison do
   use HTTPoison.Base
 
   require OpenTelemetry
-  require OpenTelemetry.Tracer
+  require OpenTelemetry.SemanticConventions.Trace, as: Conventions
   require OpenTelemetry.Span
+  require OpenTelemetry.Tracer
   require Record
 
   alias HTTPoison.Request
   alias OpenTelemetry.Tracer
+
+  @http_url Atom.to_string(Conventions.http_url())
+  @http_method Atom.to_string(Conventions.http_method())
+  @http_route Atom.to_string(Conventions.http_route())
+  @http_status_code Atom.to_string(Conventions.http_status_code())
+  @net_peer_name Atom.to_string(Conventions.net_peer_name())
 
   @doc ~S"""
   Configures Telepoison using the provided `opts` `Keyword list`.
@@ -143,14 +150,14 @@ defmodule Telepoison do
   def request(%Request{options: opts} = request) do
     save_parent_ctx()
 
-    span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
+    span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> default_span_name(request) end)
 
     %URI{host: host} = request.url |> process_request_url() |> URI.parse()
 
     resource_route = fn ->
       case get_resource_route(opts, request) do
         resource_route when is_binary(resource_route) ->
-          [{"http.route", resource_route}]
+          [{@http_route, resource_route}]
 
         nil ->
           []
@@ -187,7 +194,7 @@ defmodule Telepoison do
       Tracer.set_status(:error, "")
     end
 
-    Tracer.set_attribute("http.status_code", status_code)
+    Tracer.set_attribute(@http_status_code, status_code)
     end_span()
     status_code
   end
@@ -197,11 +204,8 @@ defmodule Telepoison do
     restore_parent_ctx()
   end
 
-  def compute_default_span_name(request) do
-    method_str = request.method |> Atom.to_string() |> String.upcase()
-    %URI{authority: authority} = request.url |> process_request_url() |> URI.parse()
-    "#{method_str} #{authority}"
-  end
+  # see https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#name
+  def default_span_name(request), do: request.method |> Atom.to_string() |> String.upcase()
 
   @ctx_key {__MODULE__, :parent_ctx}
   defp save_parent_ctx do
@@ -245,12 +249,12 @@ defmodule Telepoison do
 
   defp get_standard_ot_attributes(request, host) do
     [
-      {"http.method",
+      {@http_method,
        request.method
        |> Atom.to_string()
        |> String.upcase()},
-      {"http.url", request.url},
-      {"net.peer.name", host}
+      {@http_url, request.url},
+      {@net_peer_name, host}
     ]
   end
 
