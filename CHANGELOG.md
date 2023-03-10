@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [1.2.0] - 2023-03-10
+
 ### Added
 
 - New `:ot_attributes` option to set default Open Telemetry metadata attributes to be added to each Telepoison request
@@ -26,5 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `"net.peer.name"` attribute
 - HTTPoison 2.0.0 is now supported
 
-[Unreleased]: https://github.com/primait/teleplug/compare/1.1.2...HEAD
+
+[Unreleased]: https://github.com/primait/telepoison/compare/1.2.0...HEAD
+[1.2.0]: https://github.com/primait/telepoison/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/primait/teleplug/releases/tag/1.1.2
