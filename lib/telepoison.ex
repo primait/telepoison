@@ -300,7 +300,7 @@ defmodule Telepoison do
   end
 
   defp get_defaults(:infer_fn) do
-    if is_agent_started?() do
+    if agent_started?() do
       Agent.get(
         __MODULE__,
         fn
@@ -317,7 +317,7 @@ defmodule Telepoison do
   end
 
   defp get_defaults(:ot_attributes) do
-    if is_agent_started?() do
+    if agent_started?() do
       attributes =
         Agent.get(
           __MODULE__,
@@ -336,7 +336,7 @@ defmodule Telepoison do
     end
   end
 
-  defp is_agent_started?, do: Process.whereis(__MODULE__) != nil
+  defp agent_started?, do: Process.whereis(__MODULE__) != nil
 
   defp strip_uri_credentials(uri) do
     uri |> URI.parse() |> Map.put(:userinfo, nil) |> Map.put(:authority, nil) |> URI.to_string()
