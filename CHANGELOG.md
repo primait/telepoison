@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2023-03-13
+
+### Fixed
+
+- `Telepoison.request` will work even if `Telepoison.setup` hasn't been called
+
+---
+
 ## [1.2.0] - 2023-03-10
 
 ### Added
@@ -31,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HTTPoison 2.0.0 is now supported
 
 
-[Unreleased]: https://github.com/primait/telepoison/compare/1.2.0...HEAD
+[Unreleased]: https://github.com/primait/telepoison/compare/1.2.1...HEAD
+[1.2.1]: https://github.com/primait/telepoison/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/primait/telepoison/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/primait/teleplug/releases/tag/1.1.2
