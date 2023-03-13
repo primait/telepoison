@@ -336,7 +336,7 @@ defmodule Telepoison do
     end
   end
 
-  defp is_agent_started?(), do: Process.whereis(__MODULE__) != nil
+  defp is_agent_started?, do: Process.whereis(__MODULE__) != nil
 
   defp strip_uri_credentials(uri) do
     uri |> URI.parse() |> Map.put(:userinfo, nil) |> Map.put(:authority, nil) |> URI.to_string()
