@@ -205,7 +205,7 @@ defmodule Telepoison do
   end
 
   # see https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#name
-  def default_span_name(request), do: request.method |> Atom.to_string() |> String.upcase()
+  defp default_span_name(request), do: request.method |> Atom.to_string() |> String.upcase()
 
   @ctx_key {__MODULE__, :parent_ctx}
   defp save_parent_ctx do
@@ -259,7 +259,7 @@ defmodule Telepoison do
   end
 
   defp get_ot_attributes(opts) do
-    default_ot_attributes = get_defaults(:ot_attributes)
+    default_ot_attributes = get_defaults!(:ot_attributes)
 
     default_ot_attributes
     |> Enum.concat(Keyword.get(opts, :ot_attributes, []))
@@ -276,7 +276,7 @@ defmodule Telepoison do
   end
 
   defp get_resource_route([ot_resource_route: :infer], request) do
-    get_defaults(:infer_fn).(request)
+    get_defaults!(:infer_fn).(request)
   end
 
   defp get_resource_route([ot_resource_route: :ignore], _) do
@@ -292,34 +292,53 @@ defmodule Telepoison do
     nil
   end
 
-  defp get_defaults(:infer_fn) do
-    Agent.get(
-      __MODULE__,
-      fn
-        {infer_fn, _} when is_function(infer_fn, 1) ->
-          infer_fn
+  defp get_defaults!(key) do
+    case get_defaults(key) do
+      {:ok, value} -> value
+      {:error, error} -> raise ArgumentError, error
+    end
+  end
 
-        _ ->
-          raise ArgumentError,
-                "The configured :infer_route keyword option value must be a function with an arity of 1"
-      end
-    )
+  defp get_defaults(:infer_fn) do
+    if is_agent_started?() do
+      Agent.get(
+        __MODULE__,
+        fn
+          {infer_fn, _} when is_function(infer_fn, 1) ->
+            {:ok, infer_fn}
+
+          _ ->
+            {:error, "The configured :infer_route keyword option value must be a function with an arity of 1"}
+        end
+      )
+    else
+      {:error, "Route inference function hasn't been configured"}
+    end
   end
 
   defp get_defaults(:ot_attributes) do
-    Agent.get(
-      __MODULE__,
-      fn
-        {_, ot_attributes} when is_list(ot_attributes) ->
-          ot_attributes
+    if is_agent_started?() do
+      attributes =
+        Agent.get(
+          __MODULE__,
+          fn
+            {_, ot_attributes} when is_list(ot_attributes) ->
+              ot_attributes
 
-        _ ->
-          []
-      end
-    )
+            _ ->
+              []
+          end
+        )
+
+      {:ok, attributes}
+    else
+      {:ok, []}
+    end
   end
 
-  def strip_uri_credentials(uri) do
+  defp is_agent_started?(), do: Process.whereis(__MODULE__) != nil
+
+  defp strip_uri_credentials(uri) do
     uri |> URI.parse() |> Map.put(:userinfo, nil) |> Map.put(:authority, nil) |> URI.to_string()
   end
 end
