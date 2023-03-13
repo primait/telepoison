@@ -252,6 +252,14 @@ defmodule TelepoisonTest do
     end
   end
 
+  test "Telepoison works if setup is not called" do
+    Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_attributes: [{"some_attribute", "some value"}])
+
+    assert_receive {:span, span(attributes: attributes)}, 1000
+
+    assert confirm_attributes(attributes, {"some_attribute", "some value"})
+  end
+
   def flush_mailbox do
     receive do
       _ -> flush_mailbox()
