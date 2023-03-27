@@ -56,9 +56,9 @@ defmodule TelepoisonTest do
     end
 
     test "traceparent header is injected to atom user-supplied map headers" do
-      %HTTPoison.Response{request: %{headers: headers}} = Telepoison.get!("http://localhost:8000", %{:atom => "value"})
+      %HTTPoison.Response{request: %{headers: headers}} = Telepoison.get!("http://localhost:8000", [atom: "value"])
 
-      assert :atom in Enum.map(headers, &elem(&1, 0))
+      assert "atom" in Enum.map(headers, &elem(&1, 0))
     end
 
     test "http.url doesn't contain credentials" do

@@ -73,6 +73,7 @@ defmodule Telepoison do
     :ok
   end
 
+  @spec process_request_headers(Request.headers()) :: Request.headers()
   def process_request_headers(headers) when is_map(headers) do
     headers
     |> Enum.into([])
@@ -80,7 +81,15 @@ defmodule Telepoison do
   end
 
   def process_request_headers(headers) when is_list(headers) do
-    :otel_propagator_text_map.inject(headers)
+    headers
+    # Convert atom header keys.
+    # otel_propagator_text_map only accepts string keys, while Request.headers() keys can be atoms or strings.
+    # The value in Request.headers() has to be a binary() so we don't need to convert it
+    #
+    # Note that this causes the header keys from HTTPoison.Response{request: %{headers: headers}} to also become strings
+    # while with plain HTTPoison they would remain atoms.
+    |> Enum.map(fn {k, v} -> {to_string(k), v} end)
+    |> :otel_propagator_text_map.inject()
   end
 
   @doc ~S"""
