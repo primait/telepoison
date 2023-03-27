@@ -73,7 +73,6 @@ defmodule Telepoison do
     :ok
   end
 
-  @spec process_request_headers(Request.headers()) :: Request.headers()
   def process_request_headers(headers) when is_map(headers) do
     headers
     |> Enum.into([])
