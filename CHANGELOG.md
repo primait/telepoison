@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Trace propagation breaking if one of the header keys was an atom instead of string.
+  Note that this also causes HTTPoison.Response{request: %{headers}} to always use string for header keys.
+
 ---
 
 ## [1.2.1] - 2023-03-13
