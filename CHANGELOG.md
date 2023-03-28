@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [1.2.2] - 2023-03-28
+
 ### Fixed
 - Trace propagation breaking if one of the header keys was an atom instead of string.
   Note that this also causes HTTPoison.Response{request: %{headers}} to always use string for header keys.
@@ -43,7 +47,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HTTPoison 2.0.0 is now supported
 
 
-[Unreleased]: https://github.com/primait/telepoison/compare/1.2.1...HEAD
+
+[Unreleased]: https://github.com/primait/telepoison/compare/1.2.2...HEAD
+[1.2.2]: https://github.com/primait/telepoison/compare/1.2.1...1.2.2
 [1.2.1]: https://github.com/primait/telepoison/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/primait/telepoison/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/primait/teleplug/releases/tag/1.1.2
