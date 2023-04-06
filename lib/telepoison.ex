@@ -16,6 +16,7 @@ defmodule Telepoison do
 
   alias HTTPoison.Request
   alias OpenTelemetry.Tracer
+  alias Telepoison.Configuration
 
   @http_url Atom.to_string(Conventions.http_url())
   @http_method Atom.to_string(Conventions.http_method())
@@ -67,11 +68,7 @@ defmodule Telepoison do
 
   """
   @spec setup(infer_fn: (Request.t() -> String.t()), ot_attributes: [{String.t(), String.t()}]) :: :ok
-  def setup(opts \\ []) do
-    Agent.start_link(fn -> set_defaults(opts) end, name: __MODULE__)
-
-    :ok
-  end
+  def setup(opts \\ []), do: Configuration.setup(opts)
 
   def process_request_headers(headers) when is_map(headers) do
     headers
@@ -227,34 +224,6 @@ defmodule Telepoison do
     Tracer.set_current_span(ctx)
   end
 
-  defp set_defaults(opts) do
-    infer_fn =
-      case Keyword.get(opts, :infer_route) do
-        nil ->
-          &Telepoison.URI.infer_route_from_request/1
-
-        infer_fn when is_function(infer_fn, 1) ->
-          infer_fn
-      end
-
-    ot_attributes =
-      case Keyword.get(opts, :ot_attributes) do
-        ot_attributes when is_list(ot_attributes) ->
-          Enum.map(ot_attributes, fn
-            {key, value} when is_binary(key) and is_binary(value) ->
-              {key, value}
-
-            _ ->
-              nil
-          end)
-
-        _ ->
-          []
-      end
-
-    {infer_fn, ot_attributes}
-  end
-
   defp get_standard_ot_attributes(request, host) do
     [
       {@http_method,
@@ -267,7 +236,7 @@ defmodule Telepoison do
   end
 
   defp get_ot_attributes(opts) do
-    default_ot_attributes = get_defaults!(:ot_attributes)
+    default_ot_attributes = Configuration.get!(:ot_attributes)
 
     default_ot_attributes
     |> Enum.concat(Keyword.get(opts, :ot_attributes, []))
@@ -284,7 +253,7 @@ defmodule Telepoison do
   end
 
   defp get_resource_route([ot_resource_route: :infer], request) do
-    get_defaults!(:infer_fn).(request)
+    Configuration.get!(:infer_fn).(request)
   end
 
   defp get_resource_route([ot_resource_route: :ignore], _) do
@@ -299,52 +268,6 @@ defmodule Telepoison do
   defp get_resource_route(_, _) do
     nil
   end
-
-  defp get_defaults!(key) do
-    case get_defaults(key) do
-      {:ok, value} -> value
-      {:error, error} -> raise ArgumentError, error
-    end
-  end
-
-  defp get_defaults(:infer_fn) do
-    if agent_started?() do
-      Agent.get(
-        __MODULE__,
-        fn
-          {infer_fn, _} when is_function(infer_fn, 1) ->
-            {:ok, infer_fn}
-
-          _ ->
-            {:error, "The configured :infer_route keyword option value must be a function with an arity of 1"}
-        end
-      )
-    else
-      {:error, "Route inference function hasn't been configured"}
-    end
-  end
-
-  defp get_defaults(:ot_attributes) do
-    if agent_started?() do
-      attributes =
-        Agent.get(
-          __MODULE__,
-          fn
-            {_, ot_attributes} when is_list(ot_attributes) ->
-              ot_attributes
-
-            _ ->
-              []
-          end
-        )
-
-      {:ok, attributes}
-    else
-      {:ok, []}
-    end
-  end
-
-  defp agent_started?, do: Process.whereis(__MODULE__) != nil
 
   defp strip_uri_credentials(uri) do
     uri |> URI.parse() |> Map.put(:userinfo, nil) |> Map.put(:authority, nil) |> URI.to_string()
