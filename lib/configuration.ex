@@ -1,4 +1,6 @@
 defmodule Telepoison.Configuration do
+  @moduledoc false
+
   @spec setup(infer_fn: (Request.t() -> String.t()), ot_attributes: [{String.t(), String.t()}]) :: :ok
   def setup(opts \\ []) do
     Agent.start_link(fn -> set_defaults(opts) end, name: __MODULE__)
