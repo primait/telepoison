@@ -56,7 +56,7 @@ defmodule Telepoison.Configuration do
   def get(key)
 
   def get(:infer_fn) do
-    if agent_started?() do
+    try do
       Agent.get(
         __MODULE__,
         fn
@@ -67,13 +67,14 @@ defmodule Telepoison.Configuration do
             {:error, "The configured :infer_route keyword option value must be a function with an arity of 1"}
         end
       )
-    else
-      {:error, "Route inference function hasn't been configured"}
+    catch
+      :exit, {:noproc, _} ->
+        {:error, "Route inference function hasn't been configured"}
     end
   end
 
   def get(:ot_attributes) do
-    if agent_started?() do
+    try do
       attributes =
         Agent.get(
           __MODULE__,
@@ -87,10 +88,9 @@ defmodule Telepoison.Configuration do
         )
 
       {:ok, attributes}
-    else
-      {:ok, []}
+    catch
+      :exit, {:noproc, _} ->
+        {:ok, []}
     end
   end
-
-  defp agent_started?, do: Process.whereis(__MODULE__) != nil
 end
