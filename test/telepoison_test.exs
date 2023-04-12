@@ -195,6 +195,15 @@ defmodule TelepoisonTest do
       assert confirm_attributes(attributes, {"test_attribute", "test"})
     end
 
+    test "default attributes that are not binary will be ignored" do
+      Telepoison.setup(ot_attributes: [{"test_attribute", "test"}, {1, "ignored"}, {:ignored, "ignored_too"}])
+
+      Telepoison.get!("http://localhost:8000/user/edit/24")
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      assert confirm_attributes(attributes, {"test_attribute", "test"})
+    end
+
     test "default attributes can be overridden via a two element tuple list passed to the Telepoison invocation" do
       Telepoison.setup(ot_attributes: [{"test_attribute", "test"}])
 
