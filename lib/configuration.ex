@@ -1,9 +1,11 @@
 defmodule Telepoison.Configuration do
   @moduledoc false
 
-  alias HTTPoison.Request
-
   @default_route_inference_function &Telepoison.URI.infer_route_from_request/1
+
+  defstruct [:infer_route, :ot_attributes]
+
+  alias HTTPoison.Request
 
   @spec setup(infer_route: (Request.t() -> String.t()), ot_attributes: [{String.t(), String.t()}]) :: :ok
   def setup(opts \\ []) do
@@ -45,7 +47,7 @@ defmodule Telepoison.Configuration do
           raise RuntimeError, "The configured :ot_attributes option must be a [{key, value}] list"
       end
 
-    {infer_fn, ot_attributes}
+    %__MODULE__{infer_route: infer_fn, ot_attributes: ot_attributes}
   end
 
   @doc """
@@ -70,7 +72,7 @@ defmodule Telepoison.Configuration do
       Agent.get(
         __MODULE__,
         fn
-          {infer_fn, _} ->
+          %__MODULE__{infer_route: infer_fn} ->
             {:ok, infer_fn}
         end
       )
@@ -86,7 +88,7 @@ defmodule Telepoison.Configuration do
         Agent.get(
           __MODULE__,
           fn
-            {_, ot_attributes} ->
+            %__MODULE__{ot_attributes: ot_attributes} ->
               ot_attributes
           end
         )
