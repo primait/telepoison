@@ -3,6 +3,8 @@ defmodule Telepoison.Configuration do
 
   alias HTTPoison.Request
 
+  @default_route_inference_function &Telepoison.URI.infer_route_from_request/1
+
   @spec setup(infer_route: (Request.t() -> String.t()), ot_attributes: [{String.t(), String.t()}]) :: :ok
   def setup(opts \\ []) do
     Agent.start_link(fn -> set_defaults(opts) end, name: __MODULE__)
@@ -15,7 +17,7 @@ defmodule Telepoison.Configuration do
       case Keyword.get(opts, :infer_route) do
         # Unset, return default function
         nil ->
-          &Telepoison.URI.infer_route_from_request/1
+          @default_route_inference_function
 
         infer_fn when is_function(infer_fn, 1) ->
           infer_fn
@@ -27,17 +29,20 @@ defmodule Telepoison.Configuration do
 
     ot_attributes =
       case Keyword.get(opts, :ot_attributes) do
+        nil ->
+          []
+
         ot_attributes when is_list(ot_attributes) ->
-          Enum.map(ot_attributes, fn
+          Enum.filter(ot_attributes, fn
             {key, value} when is_binary(key) and is_binary(value) ->
-              {key, value}
+              true
 
             _ ->
-              nil
+              false
           end)
 
         _ ->
-          []
+          raise RuntimeError, "The configured :ot_attributes option must be a [{key, value}] list"
       end
 
     {infer_fn, ot_attributes}
@@ -65,16 +70,13 @@ defmodule Telepoison.Configuration do
       Agent.get(
         __MODULE__,
         fn
-          {infer_fn, _} when is_function(infer_fn, 1) ->
+          {infer_fn, _} ->
             {:ok, infer_fn}
-
-          _ ->
-            {:error, "The configured :infer_route keyword option value must be a function with an arity of 1"}
         end
       )
     catch
       :exit, {:noproc, _} ->
-        {:error, "Route inference function hasn't been configured"}
+        {:ok, @default_route_inference_function}
     end
   end
 
@@ -84,11 +86,8 @@ defmodule Telepoison.Configuration do
         Agent.get(
           __MODULE__,
           fn
-            {_, ot_attributes} when is_list(ot_attributes) ->
+            {_, ot_attributes} ->
               ot_attributes
-
-            _ ->
-              []
           end
         )
 
