@@ -7,12 +7,12 @@ defmodule Telepoison.Configuration do
 
   @spec setup(infer_route: (Request.t() -> String.t()), ot_attributes: [{String.t(), String.t()}]) :: :ok
   def setup(opts \\ []) do
-    Agent.start_link(fn -> set_defaults(opts) end, name: __MODULE__)
+    Agent.start_link(fn -> set_configuration(opts) end, name: __MODULE__)
 
     :ok
   end
 
-  defp set_defaults(opts) do
+  defp set_configuration(opts) do
     infer_fn =
       case Keyword.get(opts, :infer_route) do
         # Unset, return default function
@@ -49,7 +49,7 @@ defmodule Telepoison.Configuration do
   end
 
   @doc """
-  Get a configuration value or raise `ArgumentError`
+  Get a configuration value or raise a `RuntimeError`
   """
   @spec get!(:infer_route | :ot_attributes) :: any
   def get!(key) do
