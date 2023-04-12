@@ -251,7 +251,7 @@ defmodule Telepoison do
 
   defp get_resource_route(infer_fn, request) when is_function(infer_fn, 1), do: infer_fn.(request)
 
-  defp get_resource_route(:infer, request), do: Configuration.get!(:infer_fn).(request)
+  defp get_resource_route(:infer, request), do: Configuration.get!(:infer_route).(request)
 
   defp get_resource_route(:ignore, _), do: nil
 

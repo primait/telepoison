@@ -3,7 +3,7 @@ defmodule Telepoison.Configuration do
 
   alias HTTPoison.Request
 
-  @spec setup(infer_fn: (Request.t() -> String.t()), ot_attributes: [{String.t(), String.t()}]) :: :ok
+  @spec setup(infer_route: (Request.t() -> String.t()), ot_attributes: [{String.t(), String.t()}]) :: :ok
   def setup(opts \\ []) do
     Agent.start_link(fn -> set_defaults(opts) end, name: __MODULE__)
 
@@ -13,11 +13,16 @@ defmodule Telepoison.Configuration do
   defp set_defaults(opts) do
     infer_fn =
       case Keyword.get(opts, :infer_route) do
+        # Unset, return default function
         nil ->
           &Telepoison.URI.infer_route_from_request/1
 
         infer_fn when is_function(infer_fn, 1) ->
           infer_fn
+
+        # Set incorrectly
+        _ ->
+          raise RuntimeError, "The configured :infer_route keyword option value must be a function with an arity of 1"
       end
 
     ot_attributes =
@@ -41,21 +46,21 @@ defmodule Telepoison.Configuration do
   @doc """
   Get a configuration value or raise `ArgumentError`
   """
-  @spec get!(:infer_fn | :ot_attributes) :: any
+  @spec get!(:infer_route | :ot_attributes) :: any
   def get!(key) do
     case get(key) do
       {:ok, value} -> value
-      {:error, error} -> raise ArgumentError, error
+      {:error, error} -> raise RuntimeError, error
     end
   end
 
   @doc """
   Get a configuration value if present and `setup` has been called or return an error
   """
-  @spec get(:infer_fn | :ot_attributes) :: {:ok, any()} | {:error, String.t()}
+  @spec get(:infer_route | :ot_attributes) :: {:ok, any()} | {:error, String.t()}
   def get(key)
 
-  def get(:infer_fn) do
+  def get(:infer_route) do
     try do
       Agent.get(
         __MODULE__,
