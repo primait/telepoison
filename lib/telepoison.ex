@@ -159,20 +159,21 @@ defmodule Telepoison do
 
     %URI{host: host} = request.url |> process_request_url() |> URI.parse()
 
-    resource_route = fn ->
-      case get_resource_route(opts, request) do
+    resource_route_attribute =
+      Keyword.get(opts, :ot_resource_route, :unset)
+      |> get_resource_route(request)
+      |> case do
         resource_route when is_binary(resource_route) ->
           [{@http_route, resource_route}]
 
         nil ->
           []
       end
-    end
 
     ot_attributes =
       get_standard_ot_attributes(request, host) ++
         get_ot_attributes(opts) ++
-        resource_route.()
+        resource_route_attribute
 
     request_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: ot_attributes})
     Tracer.set_current_span(request_ctx)
@@ -244,30 +245,24 @@ defmodule Telepoison do
     |> Enum.into([], fn {key, value} -> {key, value} end)
   end
 
-  defp get_resource_route([ot_resource_route: route], _) when is_binary(route) do
-    route
-  end
+  defp get_resource_route(option, request)
 
-  defp get_resource_route([ot_resource_route: infer_fn], request) when is_function(infer_fn, 1) do
-    infer_fn.(request)
-  end
+  defp get_resource_route(route, _) when is_binary(route), do: route
 
-  defp get_resource_route([ot_resource_route: :infer], request) do
-    Configuration.get!(:infer_fn).(request)
-  end
+  defp get_resource_route(infer_fn, request) when is_function(infer_fn, 1), do: infer_fn.(request)
 
-  defp get_resource_route([ot_resource_route: :ignore], _) do
-    nil
-  end
+  defp get_resource_route(:infer, request), do: Configuration.get!(:infer_fn).(request)
 
-  defp get_resource_route([ot_resource_route: _], _) do
-    raise ArgumentError,
-          "The :ot_resource_route keyword option value must either be a binary, a function with an arity of 1 or the :infer or :ignore atom"
-  end
+  defp get_resource_route(:ignore, _), do: nil
 
-  defp get_resource_route(_, _) do
-    nil
-  end
+  defp get_resource_route(:unset, _), do: nil
+
+  defp get_resource_route(_unknown_option, _),
+    do:
+      raise(
+        ArgumentError,
+        "The :ot_resource_route keyword option value must either be a binary, a function with an arity of 1 or the :infer or :ignore atom"
+      )
 
   defp strip_uri_credentials(uri) do
     uri |> URI.parse() |> Map.put(:userinfo, nil) |> Map.put(:authority, nil) |> URI.to_string()

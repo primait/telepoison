@@ -114,6 +114,17 @@ defmodule TelepoisonTest do
         Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: 1)
       end)
     end
+
+    test "resource route and attributes can be passed to Telepoison as options together" do
+      Telepoison.get!("http://localhost:8000/user/edit/24", [],
+        ot_resource_route: "/user/edit",
+        ot_attributes: [{"app.callname", "mariorossi"}]
+      )
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      assert confirm_attributes(attributes, {"http.route", "/user/edit"})
+      assert confirm_attributes(attributes, {"app.callname", "mariorossi"})
+    end
   end
 
   describe "parent span is not affected" do
