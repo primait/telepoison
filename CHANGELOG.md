@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- configuration options are correctly validated during `setup` instead of upon retrieval
+- request options (e.g. `:ot_resource_route` and `:ot_attributes`) can be correctly passed together to Telepoison calls (e.g. `get`)
+- non valid `:ot_attributes` are ignored instead of being mapped to `nil`
+- usages of `:infer_fn` are now all `:infer_route`, which is the correct option
+
 ---
 
 ## [1.2.2] - 2023-03-28
 
 ### Fixed
+
 - Trace propagation breaking if one of the header keys was an atom instead of string.
   Note that this also causes HTTPoison.Response{request: %{headers}} to always use string for header keys.
 
@@ -45,8 +53,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - New `"net.peer.name"` attribute
 - HTTPoison 2.0.0 is now supported
-
-
 
 [Unreleased]: https://github.com/primait/telepoison/compare/1.2.2...HEAD
 [1.2.2]: https://github.com/primait/telepoison/compare/1.2.1...1.2.2
