@@ -160,7 +160,8 @@ defmodule Telepoison do
     %URI{host: host} = request.url |> process_request_url() |> URI.parse()
 
     resource_route_attribute =
-      Keyword.get(opts, :ot_resource_route, :unset)
+      opts
+      |> Keyword.get(:ot_resource_route, :unset)
       |> get_resource_route(request)
       |> case do
         resource_route when is_binary(resource_route) ->
