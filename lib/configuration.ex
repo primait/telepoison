@@ -1,23 +1,23 @@
 defmodule Telepoison.Configuration do
   @moduledoc false
 
-  @spec validate() :: :ok | {:error, [String.t()]}
-  def validate() do
+  @spec validate :: :ok | {:error, [String.t()]}
+  def validate do
     errors = []
 
     route_inference_fn = get(:infer_route)
 
     errors =
-      if not is_function(route_inference_fn, 1),
-        do: ["The configured :infer_route keyword option value must be a function with an arity of 1" | errors],
-        else: errors
+      if is_function(route_inference_fn, 1),
+        do: errors,
+        else: ["The configured :infer_route keyword option value must be a function with an arity of 1" | errors]
 
     ot_attributes = get(:ot_attributes)
 
     errors =
-      if not is_list(ot_attributes),
-        do: ["The configured :ot_attributes option must be a [{key, value}] list"],
-        else: errors
+      if is_list(ot_attributes),
+        do: errors,
+        else: ["The configured :ot_attributes option must be a [{key, value}] list"]
 
     case errors do
       [] -> :ok

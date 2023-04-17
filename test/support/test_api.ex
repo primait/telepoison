@@ -1,4 +1,6 @@
 defmodule Telepoison.TestApi do
+  @moduledoc false
+
   use ExUnit.Case
 
   def set_env(key, value) do
