@@ -24,52 +24,6 @@ defmodule Telepoison do
   @http_status_code Atom.to_string(Conventions.http_status_code())
   @net_peer_name Atom.to_string(Conventions.net_peer_name())
 
-  @doc ~S"""
-  Configures Telepoison using the provided `opts` `Keyword list`.
-  You should call this function within your application startup, before Telepoison is used.
-
-  Using the `:ot_attributes` option, you can set default Open Telemetry metadata attributes
-  to be added to each Telepoison request in the format of a list of two element tuples, with both elements
-  being strings.
-
-  Attributes can be overridden per each call to `Telepoison.request/1`.
-
-  Using the `:infer_route` option, you can customise the URL resource route inference procedure
-  that is used to set the `http.route` Open Telemetry metadata attribute.
-
-  If a function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) is provided
-  then that function is used to determine the inference.
-
-  If no value is provided then the out of the box, conservative inference provided by
-  `Telepoison.URI.infer_route_from_request/1` is used to determine the inference.
-
-  This can be overridden per each call to `Telepoison.request/1`.
-
-    ## Examples
-
-      iex> Telepoison.setup()
-      :ok
-
-      iex> infer_fn = fn
-      ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
-      ...> end
-      iex> Telepoison.setup(infer_route: infer_fn)
-      :ok
-
-      iex> Telepoison.setup(ot_attributes: [{"service.name", "..."}, {"service.namespace", "..."}])
-      :ok
-
-      iex> infer_fn = fn
-      ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
-      ...> end
-      iex> ot_attributes = [{"service.name", "..."}, {"service.namespace", "..."}]
-      iex> Telepoison.setup(infer_fn: infer_fn, ot_attributes: ot_attributes)
-      :ok
-
-  """
-  @spec setup(infer_fn: (Request.t() -> String.t()), ot_attributes: [{String.t(), String.t()}]) :: :ok
-  def setup(opts \\ []), do: Configuration.setup(opts)
-
   def process_request_headers(headers) when is_map(headers) do
     headers
     |> Enum.into([])
@@ -91,7 +45,7 @@ defmodule Telepoison do
   @doc ~S"""
   Performs a request using Telepoison with the provided `t:HTTPoison.Request/0` `request`.
 
-  Depending on configuration passed to `Telepoison.setup/1` and whether or not the `:ot_resource_route`
+  Depending how `Telepoison` is configured and whether or not the `:ot_resource_route`
   option is set to `:infer` (provided as a part of the `t:HTTPoison.Request/0` `options` `Keyword list`)
   this may attempt to automatically set the `http.route` Open Telemetry metadata attribute by obtaining
   the first segment of the `t:HTTPoison.Request/0` `url` (since this part typically does not contain dynamic data)
@@ -103,7 +57,6 @@ defmodule Telepoison do
 
     ## Examples
 
-      iex> Telepoison.setup()
       iex> request = %HTTPoison.Request{
       ...> method: :post,
       ...> url: "https://www.example.com/users/edit/2",
@@ -111,7 +64,6 @@ defmodule Telepoison do
       ...> headers: [{"Accept", "application/json"}]}
       iex> Telepoison.request(request)
 
-      iex> Telepoison.setup()
       iex> request = %HTTPoison.Request{
       ...> method: :post,
       ...> url: "https://www.example.com/users/edit/2",
@@ -120,7 +72,6 @@ defmodule Telepoison do
       ...> options: [ot_resource_route: :infer]}
       iex> Telepoison.request(request)
 
-      iex> Telepoison.setup()
       iex> resource_route = "/users/edit/"
       iex> request = %HTTPoison.Request{
       ...> method: :post,
@@ -130,7 +81,6 @@ defmodule Telepoison do
       ...> options: [ot_resource_route: resource_route]}
       iex> Telepoison.request(request)
 
-      iex> Telepoison.setup()
       iex> infer_fn = fn
       ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
       ...> end
@@ -142,7 +92,6 @@ defmodule Telepoison do
       ...> options: [ot_resource_route: infer_fn]}
       iex> Telepoison.request(request)
 
-      iex> Telepoison.setup()
       iex> request = %HTTPoison.Request{
       ...> method: :post,
       ...> url: "https://www.example.com/users/edit/2",
@@ -238,7 +187,7 @@ defmodule Telepoison do
   end
 
   defp get_ot_attributes(opts) do
-    default_ot_attributes = Configuration.get!(:ot_attributes)
+    default_ot_attributes = Configuration.get(:ot_attributes)
 
     default_ot_attributes
     |> Enum.concat(Keyword.get(opts, :ot_attributes, []))
@@ -252,7 +201,7 @@ defmodule Telepoison do
 
   defp get_resource_route(infer_fn, request) when is_function(infer_fn, 1), do: infer_fn.(request)
 
-  defp get_resource_route(:infer, request), do: Configuration.get!(:infer_route).(request)
+  defp get_resource_route(:infer, request), do: Configuration.get(:infer_route).(request)
 
   defp get_resource_route(:ignore, _), do: nil
 

@@ -1,7 +1,8 @@
 defmodule TelepoisonTest do
   alias Telepoison
+  alias Telepoison.TestApi
   alias OpenTelemetry.Tracer
-  use ExUnit.Case
+  use ExUnit.Case, async: false
 
   doctest Telepoison
 
@@ -18,11 +19,7 @@ defmodule TelepoisonTest do
     :ok
   end
 
-  describe "Telepoison setup without additional configuration" do
-    setup do
-      Telepoison.setup()
-    end
-
+  describe "Telepoison default attributes and headers" do
     test "standard http client span attribute are set in span" do
       Telepoison.get!("http://localhost:8000")
 
@@ -67,7 +64,9 @@ defmodule TelepoisonTest do
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"http.url", "http://localhost:8000/user/edit/24"})
     end
+  end
 
+  describe "Telepoison calls with additional options" do
     test "additional span attributes can be passed to Telepoison invocation" do
       Telepoison.get!("http://localhost:8000", [], ot_attributes: [{"app.callname", "mariorossi"}])
 
@@ -128,10 +127,6 @@ defmodule TelepoisonTest do
   end
 
   describe "parent span is not affected" do
-    setup do
-      Telepoison.setup()
-    end
-
     test "with a successful request" do
       Tracer.with_span "parent" do
         pre_request_ctx = Tracer.current_span_ctx()
@@ -154,10 +149,6 @@ defmodule TelepoisonTest do
   end
 
   describe "span_status is set to error for" do
-    setup do
-      Telepoison.setup()
-    end
-
     test "status codes >= 400" do
       Telepoison.get!("http://localhost:8000/status/400")
 
@@ -185,9 +176,9 @@ defmodule TelepoisonTest do
     end
   end
 
-  describe "Telepoison setup with additional configuration" do
-    test "default attributes can be set via a two element tuple list passed to Telepoison.setup/1" do
-      Telepoison.setup(ot_attributes: [{"test_attribute", "test"}])
+  describe "Telepoison with additional configuration" do
+    test "default attributes can be set via a two element tuple list" do
+      TestApi.set_env(:ot_attributes, [{"test_attribute", "test"}])
 
       Telepoison.get!("http://localhost:8000/user/edit/24")
 
@@ -196,7 +187,11 @@ defmodule TelepoisonTest do
     end
 
     test "default attributes that are not binary will be ignored" do
-      Telepoison.setup(ot_attributes: [{"test_attribute", "test"}, {1, "ignored"}, {:ignored, "ignored_too"}])
+      TestApi.set_env(:ot_attributes, [
+        {"test_attribute", "test"},
+        {1, "ignored"},
+        {:ignored, "ignored_too"}
+      ])
 
       Telepoison.get!("http://localhost:8000/user/edit/24")
 
@@ -205,7 +200,7 @@ defmodule TelepoisonTest do
     end
 
     test "default attributes can be overridden via a two element tuple list passed to the Telepoison invocation" do
-      Telepoison.setup(ot_attributes: [{"test_attribute", "test"}])
+      TestApi.set_env(:ot_attributes, [{"test_attribute", "test"}])
 
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_attributes: [{"test_attribute", "overridden"}])
 
@@ -214,7 +209,7 @@ defmodule TelepoisonTest do
     end
 
     test "default attributes can be combined with attributes passed to the Telepoison invocation" do
-      Telepoison.setup(ot_attributes: [{"test_attribute", "test"}, {"test_attribute_overridden", "test"}])
+      TestApi.set_env(:ot_attributes, [{"test_attribute", "test"}])
 
       Telepoison.get!("http://localhost:8000/user/edit/24", [],
         ot_attributes: [{"another_test_attribute", "another test"}, {"test_attribute_overridden", "overridden"}]
@@ -227,21 +222,19 @@ defmodule TelepoisonTest do
       assert confirm_attributes(attributes, {"test_attribute_overridden", "overridden"})
     end
 
-    test "resource route can be implicitly inferred by Telepoison invocation" do
-      Telepoison.setup()
-
+    test "resource route can be implicitly inferred by Telepoison invocation using a default function" do
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_http_route_attribute(attributes, "/user/:subpath")
     end
 
-    test "resource route can be implicitly inferred by Telepoison invocation via a function passed to Telepoison.setup/1" do
+    test "resource route can be inferred by Telepoison invocation via a configured function" do
       infer_fn = fn
         %HTTPoison.Request{} = request -> URI.parse(request.url).path
       end
 
-      Telepoison.setup(infer_route: infer_fn)
+      TestApi.set_env(:infer_route, infer_fn)
 
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
 
@@ -250,13 +243,13 @@ defmodule TelepoisonTest do
     end
 
     test "implicit resource route inference can be overridden with a function passed to the Telepoison invocation" do
-      setup_infer_fn = fn
+      infer_fn = fn
         %HTTPoison.Request{} = request -> URI.parse(request.url).path
       end
 
       invocation_infer_fn = fn _ -> "test" end
 
-      Telepoison.setup(infer_route: setup_infer_fn)
+      TestApi.set_env(:infer_route, infer_fn)
 
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: invocation_infer_fn)
 
@@ -265,11 +258,11 @@ defmodule TelepoisonTest do
     end
 
     test "implicit resource route inference can be overridden with a string passed to the Telepoison invocation" do
-      setup_infer_fn = fn
+      infer_fn = fn
         %HTTPoison.Request{} = request -> URI.parse(request.url).path
       end
 
-      Telepoison.setup(infer_route: setup_infer_fn)
+      TestApi.set_env(:infer_route, infer_fn)
 
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: "test")
 
