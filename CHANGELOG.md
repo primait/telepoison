@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `Telepoison.setup/1` is now deprecated
+- Telepoison configuration is now read from `Application` env
+
 ### Fixed
 
 - configuration options are correctly validated during `setup` instead of upon retrieval
