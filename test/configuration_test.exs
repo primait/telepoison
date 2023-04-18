@@ -9,7 +9,7 @@ defmodule ConfigurationTest do
   end
 
   test "if :ot_attributes are not a list it raises an error" do
-    assert_raise RuntimeError, fn -> Configuration.setup(ot_attributes: {:key, :value}) end
+    assert_raise ArgumentError, fn -> Configuration.setup(ot_attributes: {:key, :value}) end
   end
 
   test "if :ot_attributes are a list it sets up successfully" do
@@ -17,11 +17,11 @@ defmodule ConfigurationTest do
   end
 
   test "if :infer_route is not a function it raises an error" do
-    assert_raise RuntimeError, fn -> Configuration.setup(infer_route: :not_a_function) end
+    assert_raise ArgumentError, fn -> Configuration.setup(infer_route: :not_a_function) end
   end
 
   test "if :infer_route is a function of arity other than 1 it raises an error" do
-    assert_raise RuntimeError, fn -> Configuration.setup(infer_route: fn x, y, z -> {x, y, z} end) end
+    assert_raise ArgumentError, fn -> Configuration.setup(infer_route: fn x, y, z -> {x, y, z} end) end
   end
 
   test "if :infer_route is a function of arity 1 it sets up successfully" do
