@@ -15,3 +15,14 @@ defmodule Telepoison.TestApi do
     end)
   end
 end
+
+defmodule Telepoison.TestCase do
+  use ExUnit.CaseTemplate
+
+  setup do
+    on_exit(fn ->
+      Application.delete_env(:telepoison, :infer_route)
+      Application.delete_env(:telepoison, :ot_attributes)
+    end)
+  end
+end

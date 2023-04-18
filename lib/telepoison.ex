@@ -13,6 +13,7 @@ defmodule Telepoison do
   require OpenTelemetry.Span
   require OpenTelemetry.Tracer
   require Record
+  require Logger
 
   alias HTTPoison.Request
   alias OpenTelemetry.Tracer
@@ -23,6 +24,52 @@ defmodule Telepoison do
   @http_route Atom.to_string(Conventions.http_route())
   @http_status_code Atom.to_string(Conventions.http_status_code())
   @net_peer_name Atom.to_string(Conventions.net_peer_name())
+
+  @doc ~S"""
+  Configures Telepoison using the provided `opts` `Keyword list`.
+
+  You should call this function within your application startup, before Telepoison is used.
+  Using the `:ot_attributes` option, you can set default Open Telemetry metadata attributes
+  to be added to each Telepoison request in the format of a list of two element tuples, with both elements
+  being strings.
+
+  Attributes can be overridden per each call to `Telepoison.request/1`.
+
+  Using the `:infer_route` option, you can customise the URL resource route inference procedure
+  that is used to set the `http.route` Open Telemetry metadata attribute.
+
+  If a function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) is provided
+  then that function is used to determine the inference.
+
+  If no value is provided then the out of the box, conservative inference provided by
+  `Telepoison.URI.infer_route_from_request/1` is used to determine the inference.
+
+  This can be overridden per each call to `Telepoison.request/1`.
+
+  ## Examples
+  iex> Telepoison.setup()
+  :ok
+  iex> infer_fn = fn
+  ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
+  ...> end
+  iex> Telepoison.setup(infer_route: infer_fn)
+  :ok
+  iex> Telepoison.setup(ot_attributes: [{"service.name", "..."}, {"service.namespace", "..."}])
+  :ok
+  iex> infer_fn = fn
+  ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
+  ...> end
+  iex> ot_attributes = [{"service.name", "..."}, {"service.namespace", "..."}]
+  iex> Telepoison.setup(infer_route: infer_fn, ot_attributes: ot_attributes)
+  :ok
+  """
+  def setup(opts \\ []) do
+    Logger.warning("setup/1 is deprecated, use `config :telepoison, ...` instead")
+
+    Configuration.setup(opts)
+
+    :ok
+  end
 
   def process_request_headers(headers) when is_map(headers) do
     headers
