@@ -1,7 +1,7 @@
 defmodule ConfigurationTest do
   alias Telepoison.Configuration
 
-  use Telepoison.TestCase
+  use Telepoison.Case
 
   test "it does not crash on `get` if it has not been setup" do
     assert Configuration.get(:infer_route)

@@ -2,7 +2,7 @@ defmodule TelepoisonTest do
   alias Telepoison
   alias Telepoison.TestApi
   alias OpenTelemetry.Tracer
-  use ExUnit.Case, async: false
+  use Telepoison.Case, async: false
 
   doctest Telepoison
 
