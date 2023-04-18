@@ -24,22 +24,21 @@ Telepoison.get!(url, headers, opts)
 
 ## Configuration
 
-`Telepoison.setup/1` takes a `Keyword list` that can configure:
+Telepoison can be configured through `config :telepoison` or using `Telepoison.setup/1` which is deprecated. The configurable options are:
 
 * What default Open Telemetry metadata attributes will be sent per request using the `:ot_attributes` option
 
-If no value is provided, then no default Open Telemetry metadata attributes will sent per request by default
+  If no value is provided, then no default Open Telemetry metadata attributes will sent per request by default
 
-If a `list` of two element `tuple`s (both elements of `String.t()`) is provided, then these will form the default Open Telemetry metadata attributes
-sent per request
+  If a `list` of two element `tuple`s (both elements of `String.t()`) is provided, then these will form the default Open Telemetry metadata attributes sent per request
 
-The first element of a provided `tuple` is the attribute name, e.g. `service.name`, whilst the second element is the attribute value, e.g. "shoppingcart"
+  The first element of a provided `tuple` is the attribute name, e.g. `service.name`, whilst the second element is the attribute value, e.g. "shoppingcart"
 
 * How the `http.route` Open Telemetry metadata will be set per request using the `:infer_route` option
 
-If no value is provided then the out of the box, conservative inference provided by `Telepoison.URI.infer_route_from_request/1` is used to determine the inference
+  If no value is provided then the out of the box, conservative inference provided by `Telepoison.URI.infer_route_from_request/1` is used to determine the inference
 
-If a function with an arity of 1 (the argument given being the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference
+  If a function with an arity of 1 (the argument given being the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference
 
 Both of these can be overridden per each call to Telepoison functions that wrap `Telepoison.request/1`, such as `Telepoison.get/3`, `Telepoison.get!/3`, `Telepoison.post/3` etc.
 
@@ -67,7 +66,12 @@ If the atom `:ignore` is provided then the `http.route` attribute is ignored ent
 In the below examples, `Telepoison.get!/3` is used for the sake of simplicity but other functions derived from `Telepoison.request/1` can be used
 
 ```elixir
-Telepoison.setup(ot_attributes: [{"service.name", "users"}])
+# In config.exs
+config :telepoison,
+  ot_attributes: [{"service.name", "users"}]
+
+# Deprecated
+# Telepoison.setup(ot_attributes: [{"service.name", "users"}])
 
 Telepoison.get!(
   "https://www.example.com/user/list",
