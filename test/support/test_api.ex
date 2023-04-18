@@ -17,6 +17,8 @@ defmodule Telepoison.TestApi do
 end
 
 defmodule Telepoison.TestCase do
+  @moduledoc false
+
   use ExUnit.CaseTemplate
 
   setup do

@@ -39,7 +39,7 @@ defmodule Telepoison.Configuration do
 
     case errors do
       [] -> nil
-      _ -> raise RuntimeError, errors |> Enum.join()
+      _ -> raise RuntimeError, Enum.join(errors)
     end
   end
 
