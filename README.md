@@ -24,7 +24,7 @@ Telepoison.get!(url, headers, opts)
 
 Telepoison can be configured through `config :telepoison`. The configurable options are:
 
-* What default Open Telemetry metadata attributes will be sent per request using the `:ot_attributes` option
+* `:ot_attributes`: what default Open Telemetry metadata attributes will be sent per request
 
   If no value is provided, then no default Open Telemetry metadata attributes will sent per request by default
 
@@ -32,7 +32,7 @@ Telepoison can be configured through `config :telepoison`. The configurable opti
 
   The first element of a provided `tuple` is the attribute name, e.g. `service.name`, whilst the second element is the attribute value, e.g. "shoppingcart"
 
-* How the `http.route` Open Telemetry metadata will be set per request using the `:infer_route` option
+* `:infer_route`: how the `http.route` Open Telemetry metadata will be set per request
 
   If no value is provided then the out of the box, conservative inference provided by `Telepoison.URI.infer_route_from_request/1` is used to determine the inference
 
