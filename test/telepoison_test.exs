@@ -178,7 +178,7 @@ defmodule TelepoisonTest do
 
   describe "Telepoison with additional configuration" do
     test "default attributes can be set via a two element tuple list" do
-      TestApi.set_env(:ot_attributes, [{"test_attribute", "test"}])
+      set_env(:ot_attributes, [{"test_attribute", "test"}])
 
       Telepoison.get!("http://localhost:8000/user/edit/24")
 
@@ -187,7 +187,7 @@ defmodule TelepoisonTest do
     end
 
     test "default attributes that are not binary will be ignored" do
-      TestApi.set_env(:ot_attributes, [
+      set_env(:ot_attributes, [
         {"test_attribute", "test"},
         {1, "ignored"},
         {:ignored, "ignored_too"}
@@ -200,7 +200,7 @@ defmodule TelepoisonTest do
     end
 
     test "default attributes can be overridden via a two element tuple list passed to the Telepoison invocation" do
-      TestApi.set_env(:ot_attributes, [{"test_attribute", "test"}])
+      set_env(:ot_attributes, [{"test_attribute", "test"}])
 
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_attributes: [{"test_attribute", "overridden"}])
 
@@ -209,7 +209,7 @@ defmodule TelepoisonTest do
     end
 
     test "default attributes can be combined with attributes passed to the Telepoison invocation" do
-      TestApi.set_env(:ot_attributes, [{"test_attribute", "test"}])
+      set_env(:ot_attributes, [{"test_attribute", "test"}])
 
       Telepoison.get!("http://localhost:8000/user/edit/24", [],
         ot_attributes: [{"another_test_attribute", "another test"}, {"test_attribute_overridden", "overridden"}]
@@ -234,7 +234,7 @@ defmodule TelepoisonTest do
         %HTTPoison.Request{} = request -> URI.parse(request.url).path
       end
 
-      TestApi.set_env(:infer_route, infer_fn)
+      set_env(:infer_route, infer_fn)
 
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
 
@@ -249,7 +249,7 @@ defmodule TelepoisonTest do
 
       invocation_infer_fn = fn _ -> "test" end
 
-      TestApi.set_env(:infer_route, infer_fn)
+      set_env(:infer_route, infer_fn)
 
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: invocation_infer_fn)
 
@@ -262,7 +262,7 @@ defmodule TelepoisonTest do
         %HTTPoison.Request{} = request -> URI.parse(request.url).path
       end
 
-      TestApi.set_env(:infer_route, infer_fn)
+      set_env(:infer_route, infer_fn)
 
       Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: "test")
 
