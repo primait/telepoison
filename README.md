@@ -10,8 +10,6 @@ Telepoison is a [opentelemetry-instrumented](https://github.com/open-telemetry/o
 
 ## Usage
 
-Call `Telepoison.setup/1` within your application start-up.
-
 Replace usages of the `HTTPoison` module with `Telepoison` when calling one of the *derived* request functions provided by `HTTPoison` (`HTTPoison.get/3`, `HTTPoison.get!/3` etc.)
 
 ```elixir
@@ -24,22 +22,21 @@ Telepoison.get!(url, headers, opts)
 
 ## Configuration
 
-`Telepoison.setup/1` takes a `Keyword list` that can configure:
+Telepoison can be configured through `config :telepoison`. The configurable options are:
 
-* What default Open Telemetry metadata attributes will be sent per request using the `:ot_attributes` option
+* `:ot_attributes`: what default Open Telemetry metadata attributes will be sent per request
 
-If no value is provided, then no default Open Telemetry metadata attributes will sent per request by default
+  If no value is provided, then no default Open Telemetry metadata attributes will sent per request by default
 
-If a `list` of two element `tuple`s (both elements of `String.t()`) is provided, then these will form the default Open Telemetry metadata attributes
-sent per request
+  If a `list` of two element `tuple`s (both elements of `String.t()`) is provided, then these will form the default Open Telemetry metadata attributes sent per request
 
-The first element of a provided `tuple` is the attribute name, e.g. `service.name`, whilst the second element is the attribute value, e.g. "shoppingcart"
+  The first element of a provided `tuple` is the attribute name, e.g. `service.name`, whilst the second element is the attribute value, e.g. "shoppingcart"
 
-* How the `http.route` Open Telemetry metadata will be set per request using the `:infer_route` option
+* `:infer_route`: how the `http.route` Open Telemetry metadata will be set per request
 
-If no value is provided then the out of the box, conservative inference provided by `Telepoison.URI.infer_route_from_request/1` is used to determine the inference
+  If no value is provided then the out of the box, conservative inference provided by `Telepoison.URI.infer_route_from_request/1` is used to determine the inference
 
-If a function with an arity of 1 (the argument given being the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference
+  If a function with an arity of 1 (the argument given being the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference
 
 Both of these can be overridden per each call to Telepoison functions that wrap `Telepoison.request/1`, such as `Telepoison.get/3`, `Telepoison.get!/3`, `Telepoison.post/3` etc.
 
@@ -67,7 +64,8 @@ If the atom `:ignore` is provided then the `http.route` attribute is ignored ent
 In the below examples, `Telepoison.get!/3` is used for the sake of simplicity but other functions derived from `Telepoison.request/1` can be used
 
 ```elixir
-Telepoison.setup(ot_attributes: [{"service.name", "users"}])
+config :telepoison,
+  ot_attributes: [{"service.name", "users"}]
 
 Telepoison.get!(
   "https://www.example.com/user/list",
@@ -80,34 +78,12 @@ Telepoison.get!(
 
 In the example above:
 
-* `Telepoison.setup/1` is called with `{"service.name", "users"}` as the value for the `:ot_attributes` `Keyword list` option
+* Telepoison is configured with `{"service.name", "users"}` as the value for the `:ot_attributes` option
 * `:infer` is passed as the value for the `:ot_resource_route` `Keyword list` option
 
 Given the above, the `service.name` attribute will be set to "users" and the `http.route` attribute will be inferred as */user/:subpath*
 
 ```elixir
-Telepoison.setup(ot_attributes: [{"service.name", "users"}])
-
-Telepoison.get!(
-  "https://www.example.com/user/list",
-  [],
-  ot_span_name: "list example users",
-  ot_attributes: [{"example.language", "en"}, {"service.name", "userslist"}],
-  ot_resource_route: :infer
-)
-```
-
-In the example above:
-
-* `Telepoison.setup/1` is called with `{"service.name", "users"}` as the value for the `:ot_attributes` `Keyword list` option
-* A `{"service.name", "userslist"}` `tuple` is provided to the `:ot_attributes` `Keyword list` option
-* `:infer` is passed as the value for the `:ot_resource_route` `Keyword list` option
-
-Given the above, the `service.name` attribute will be set to "userslist" and the `http.route` attribute will be inferred as */user/:subpath*
-
-```elixir
-Telepoison.setup()
-
 Telepoison.get!(
   "https://www.example.com/user/list",
   [],
@@ -119,17 +95,15 @@ Telepoison.get!(
 
 In the example above:
 
-* `Telepoison.setup/1` is called with no arguments
 * `:infer` is passed as the value for `:ot_resource_route` `Keyword list` option
 
 Given the above, the `http.route` attribute will be inferred as */user/:subpath*
 
 ```elixir
-infer_fn = fn 
-  %HTTPoison.Request{} = request -> URI.parse(request.url).path
-end
-
-Telepoison.setup(infer_route: infer_fn)
+config :telepoison,
+  infer_route: fn 
+    %HTTPoison.Request{} = request -> URI.parse(request.url).path
+  end
 
 Telepoison.get!(
   "https://www.example.com/user/list",
@@ -140,14 +114,12 @@ Telepoison.get!(
 
 In the example above:
 
-* `Telepoison.setup/1` is called with the `:infer_route` `Keyword list` option set to a function which takes a `%HTTPoison.Request/0` argument, returning the path of the request URL
+* Telepoison is configured with the `:infer_route` option set to a function which takes a `%HTTPoison.Request/0` argument, returning the path of the request URL
 * `:infer` is passed as the value for `:ot_resource_route` `Keyword list` option
 
 Given the above, the `http.route` attribute will be inferred as */user/list*
 
 ```elixir
-Telepoison.setup()
-
 Telepoison.get!(
   "https://www.example.com/user/list",
   [],
@@ -157,14 +129,11 @@ Telepoison.get!(
 
 In the example above:
 
-* `Telepoison.setup/1` is called with no `Keyword list` options
 * `"my secret path"` is passed as the value for `:ot_resource_route` `Keyword list` option
 
 Given the above, the `http.route` attribute will be set as *my secret path*
 
 ```elixir
-Telepoison.setup()
-
 Telepoison.get!(
   "https://www.example.com/user/list",
   [],
@@ -174,7 +143,6 @@ Telepoison.get!(
 
 In the example above:
 
-* `Telepoison.setup/1` is called with no `Keyword list` options
 * `:ignore` is passed as the value for `:ot_resource_route` `Keyword list` option
 
 Given the above, the `http.route` attribute will not be set to any value
@@ -212,7 +180,7 @@ through HTTP "jumps".
 
 * Set [SpanKind](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/api.md#spankind) to client
 * Support for explicit parent span
-* Support for fixed span attributes, either in `Teleposion.setup` or in config
+* Support for fixed span attributes
 * A lot of other stuff..
 
 ## Copyright and License
