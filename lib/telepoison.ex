@@ -63,11 +63,9 @@ defmodule Telepoison do
   iex> Telepoison.setup(infer_route: infer_fn, ot_attributes: ot_attributes)
   :ok
   """
+  @deprecated "setup/1 is deprecated, use `config :telepoison, ...` instead"
   def setup(opts \\ []) do
-    Logger.warning("setup/1 is deprecated, use `config :telepoison, ...` instead")
-
     Configuration.setup(opts)
-
     :ok
   end
 
