@@ -75,7 +75,7 @@ defmodule Telepoison.MixProject do
       ],
       main: "readme",
       source_url: @source_url,
-      source_ref: "v#{@version}",
+      source_ref: @version,
       formatters: ["html"]
     ]
   end
