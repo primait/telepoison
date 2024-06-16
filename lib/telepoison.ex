@@ -19,10 +19,10 @@ defmodule Telepoison do
   alias OpenTelemetry.Tracer
   alias Telepoison.Configuration
 
-  @http_url Atom.to_string(Conventions.http_url())
   @http_method Atom.to_string(Conventions.http_method())
   @http_route Atom.to_string(Conventions.http_route())
   @http_status_code Atom.to_string(Conventions.http_status_code())
+  @http_url Atom.to_string(Conventions.http_url())
   @net_peer_name Atom.to_string(Conventions.net_peer_name())
 
   @doc ~S"""
