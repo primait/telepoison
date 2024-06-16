@@ -25,11 +25,28 @@ defmodule TelepoisonTest do
       assert_receive {:span, span(attributes: attributes_record, name: "GET")}
       attributes = elem(attributes_record, 4)
 
-      assert ["http.method", "http.status_code", "http.url", "net.peer.name"] ==
+      assert [
+               "http.method",
+               "http.request.method",
+               "http.response.status_code",
+               "http.status_code",
+               "http.url",
+               "net.peer.name",
+               "server.address",
+               "server.port",
+               "url.full",
+               "url.scheme"
+             ] ==
                attributes |> Map.keys() |> Enum.sort()
 
       assert {"http.method", "GET"} in attributes
+      assert {"http.request.method", "GET"} in attributes
+      assert {"http.response.status_code", 200} in attributes
       assert {"net.peer.name", "localhost"} in attributes
+      assert {"server.address", "localhost"} in attributes
+      assert {"server.port", 8000} in attributes
+      assert {"url.full", "http://localhost:8000"} in attributes
+      assert {"url.scheme", "http"} in attributes
     end
 
     test "traceparent header is injected when no headers" do
@@ -57,11 +74,12 @@ defmodule TelepoisonTest do
       assert "atom" in Enum.map(headers, &elem(&1, 0))
     end
 
-    test "http.url doesn't contain credentials" do
+    test "http.url and url.full don't contain credentials" do
       Telepoison.get!("http://user:pass@localhost:8000/user/edit/24")
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"http.url", "http://localhost:8000/user/edit/24"})
+      assert confirm_attributes(attributes, {"url.full", "http://localhost:8000/user/edit/24"})
     end
   end
 
@@ -78,6 +96,7 @@ defmodule TelepoisonTest do
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"http.route", "/user/edit"})
+      assert confirm_attributes(attributes, {"url.template", "/user/edit"})
     end
 
     test "resource route can be explicitly passed to Telepoison invocation as a function" do
@@ -87,6 +106,7 @@ defmodule TelepoisonTest do
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"http.route", "/user/edit/24"})
+      assert confirm_attributes(attributes, {"url.template", "/user/edit/24"})
     end
 
     test "resource route inference can be explicitly ignored" do
@@ -121,6 +141,7 @@ defmodule TelepoisonTest do
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"http.route", "/user/edit"})
+      assert confirm_attributes(attributes, {"url.template", "/user/edit"})
       assert confirm_attributes(attributes, {"app.callname", "mariorossi"})
     end
   end
@@ -297,6 +318,7 @@ defmodule TelepoisonTest do
 
   defp confirm_http_route_attribute(attributes, value) do
     confirm_attributes(attributes, {"http.route", value})
+    confirm_attributes(attributes, {"url.template", value})
   end
 
   defp confirm_http_route_attribute(attributes) do

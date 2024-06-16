@@ -20,10 +20,17 @@ defmodule Telepoison do
   alias Telepoison.Configuration
 
   @http_method Atom.to_string(Conventions.http_method())
+  @http_request_method "http.request.method"
+  @http_response_status_code "http.response.status_code"
   @http_route Atom.to_string(Conventions.http_route())
   @http_status_code Atom.to_string(Conventions.http_status_code())
   @http_url Atom.to_string(Conventions.http_url())
   @net_peer_name Atom.to_string(Conventions.net_peer_name())
+  @server_address "server.address"
+  @server_port "server.port"
+  @url_full "url.full"
+  @url_scheme "url.scheme"
+  @url_template "url.template"
 
   @doc ~S"""
   Configures Telepoison using the provided `opts` `Keyword list`.
@@ -151,7 +158,7 @@ defmodule Telepoison do
 
     span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> default_span_name(request) end)
 
-    %URI{host: host} = request.url |> process_request_url() |> URI.parse()
+    %URI{scheme: scheme, host: host, port: port} = request.url |> process_request_url() |> URI.parse()
 
     resource_route_attribute =
       opts
@@ -159,14 +166,14 @@ defmodule Telepoison do
       |> get_resource_route(request)
       |> case do
         resource_route when is_binary(resource_route) ->
-          [{@http_route, resource_route}]
+          [{@http_route, resource_route}, {@url_template, resource_route}]
 
         nil ->
           []
       end
 
     ot_attributes =
-      get_standard_ot_attributes(request, host) ++
+      get_standard_ot_attributes(request, scheme, host, port) ++
         get_ot_attributes(opts) ++
         resource_route_attribute
 
@@ -195,6 +202,7 @@ defmodule Telepoison do
       Tracer.set_status(:error, "")
     end
 
+    Tracer.set_attribute(@http_response_status_code, status_code)
     Tracer.set_attribute(@http_status_code, status_code)
     end_span()
     status_code
@@ -220,14 +228,22 @@ defmodule Telepoison do
     Tracer.set_current_span(ctx)
   end
 
-  defp get_standard_ot_attributes(request, host) do
+  defp get_standard_ot_attributes(request, scheme, host, port) do
     [
       {@http_method,
        request.method
        |> Atom.to_string()
        |> String.upcase()},
+      {@http_request_method,
+       request.method
+       |> Atom.to_string()
+       |> String.upcase()},
       {@http_url, strip_uri_credentials(request.url)},
-      {@net_peer_name, host}
+      {@net_peer_name, host},
+      {@server_address, host},
+      {@server_port, port},
+      {@url_full, strip_uri_credentials(request.url)},
+      {@url_scheme, scheme}
     ]
   end
 
