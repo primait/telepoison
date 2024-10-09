@@ -9,7 +9,10 @@ defmodule Telepoison do
   use HTTPoison.Base
 
   require OpenTelemetry
-  require OpenTelemetry.SemanticConventions.Trace, as: Conventions
+  require OpenTelemetry.SemConv.HTTPAttributes
+  require OpenTelemetry.SemConv.URLAttributes
+  require OpenTelemetry.SemConv.Incubating.URLAttributes, as: IncubatingURLAttributes
+  require OpenTelemetry.SemConv.ServerAttributes
   require OpenTelemetry.Span
   require OpenTelemetry.Tracer
   require Record
@@ -19,18 +22,16 @@ defmodule Telepoison do
   alias OpenTelemetry.Tracer
   alias Telepoison.Configuration
 
-  @http_method Atom.to_string(Conventions.http_method())
-  @http_request_method "http.request.method"
-  @http_response_status_code "http.response.status_code"
-  @http_route Atom.to_string(Conventions.http_route())
-  @http_status_code Atom.to_string(Conventions.http_status_code())
-  @http_url Atom.to_string(Conventions.http_url())
-  @net_peer_name Atom.to_string(Conventions.net_peer_name())
-  @server_address "server.address"
-  @server_port "server.port"
-  @url_full "url.full"
-  @url_scheme "url.scheme"
-  @url_template "url.template"
+  @http_request_method Atom.to_string(HTTPAttributes.http_request_method())
+  @http_request_status_code Atom.to_string(HTTPAttributes.http_request_status_code())
+  @http_route Atom.to_string(HTTPAttributes.http_route())
+
+  @server_address Atom.to_string(ServerAttributes.server_address())
+  @server_port Atom.to_string(ServerAttributes.server_port())
+
+  @url_full Atom.to_string(URLAttributes.url_full())
+  @url_scheme Atom.to_string(URLAttributes.url_scheme())
+  @url_template Atom.to_string(IncubatingURLAttributes.url_template())
 
   @doc ~S"""
   Configures Telepoison using the provided `opts` `Keyword list`.
@@ -203,7 +204,6 @@ defmodule Telepoison do
     end
 
     Tracer.set_attribute(@http_response_status_code, status_code)
-    Tracer.set_attribute(@http_status_code, status_code)
     end_span()
     status_code
   end
@@ -230,16 +230,10 @@ defmodule Telepoison do
 
   defp get_standard_ot_attributes(request, scheme, host, port) do
     [
-      {@http_method,
-       request.method
-       |> Atom.to_string()
-       |> String.upcase()},
       {@http_request_method,
        request.method
        |> Atom.to_string()
        |> String.upcase()},
-      {@http_url, strip_uri_credentials(request.url)},
-      {@net_peer_name, host},
       {@server_address, host},
       {@server_port, port},
       {@url_full, strip_uri_credentials(request.url)},
