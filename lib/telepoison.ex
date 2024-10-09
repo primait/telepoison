@@ -9,10 +9,10 @@ defmodule Telepoison do
   use HTTPoison.Base
 
   require OpenTelemetry
-  require OpenTelemetry.SemConv.HTTPAttributes
-  require OpenTelemetry.SemConv.URLAttributes
+  require OpenTelemetry.SemConv.HTTPAttributes, as: HTTPAttributes
+  require OpenTelemetry.SemConv.URLAttributes, as: URLAttributes
   require OpenTelemetry.SemConv.Incubating.URLAttributes, as: IncubatingURLAttributes
-  require OpenTelemetry.SemConv.ServerAttributes
+  require OpenTelemetry.SemConv.ServerAttributes, as: ServerAttributes
   require OpenTelemetry.Span
   require OpenTelemetry.Tracer
   require Record
