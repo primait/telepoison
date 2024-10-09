@@ -23,7 +23,7 @@ defmodule Telepoison do
   alias Telepoison.Configuration
 
   @http_request_method Atom.to_string(HTTPAttributes.http_request_method())
-  @http_response_status_code Atom.to_string(HTTPAttributes.http_respone_status_code())
+  @http_response_status_code Atom.to_string(HTTPAttributes.http_response_status_code())
   @http_route Atom.to_string(HTTPAttributes.http_route())
 
   @server_address Atom.to_string(ServerAttributes.server_address())
