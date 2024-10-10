@@ -35,7 +35,6 @@ defmodule TelepoisonTest do
              ] ==
                attributes |> Map.keys() |> Enum.sort()
 
-      assert {"http.method", "GET"} in attributes
       assert {"http.request.method", "GET"} in attributes
       assert {"http.response.status_code", 200} in attributes
       assert {"net.peer.name", "localhost"} in attributes
