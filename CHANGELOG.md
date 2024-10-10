@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+---
+
+## [2.0.0] - 2024-10-10
+
 ### Changed
 
 - The following deprecated and reduntant attributes have been removed
@@ -99,7 +103,9 @@ and this project adheres to
 - New `"net.peer.name"` attribute
 - HTTPoison 2.0.0 is now supported
 
-[Unreleased]: https://github.com/primait/telepoison/compare/1.3.2...HEAD
+
+[Unreleased]: https://github.com/primait/telepoison/compare/2.0.0...HEAD
+[2.0.0]: https://github.com/primait/telepoison/compare/1.3.2...2.0.0
 [1.3.2]: https://github.com/primait/telepoison/compare/1.3.1-rc.1...1.3.2
 [1.3.1-rc.1]: https://github.com/primait/telepoison/compare/1.3.1-rc.0...1.3.1-rc.1
 [1.3.1]: https://github.com/primait/telepoison/compare/1.3.0...1.3.1
