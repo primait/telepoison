@@ -37,7 +37,6 @@ defmodule TelepoisonTest do
 
       assert {"http.request.method", "GET"} in attributes
       assert {"http.response.status_code", 200} in attributes
-      assert {"net.peer.name", "localhost"} in attributes
       assert {"server.address", "localhost"} in attributes
       assert {"server.port", 8000} in attributes
       assert {"url.full", "http://localhost:8000"} in attributes
