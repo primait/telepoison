@@ -26,12 +26,8 @@ defmodule TelepoisonTest do
       attributes = elem(attributes_record, 4)
 
       assert [
-               "http.method",
                "http.request.method",
                "http.response.status_code",
-               "http.status_code",
-               "http.url",
-               "net.peer.name",
                "server.address",
                "server.port",
                "url.full",
@@ -39,10 +35,8 @@ defmodule TelepoisonTest do
              ] ==
                attributes |> Map.keys() |> Enum.sort()
 
-      assert {"http.method", "GET"} in attributes
       assert {"http.request.method", "GET"} in attributes
       assert {"http.response.status_code", 200} in attributes
-      assert {"net.peer.name", "localhost"} in attributes
       assert {"server.address", "localhost"} in attributes
       assert {"server.port", 8000} in attributes
       assert {"url.full", "http://localhost:8000"} in attributes
@@ -74,11 +68,10 @@ defmodule TelepoisonTest do
       assert "atom" in Enum.map(headers, &elem(&1, 0))
     end
 
-    test "http.url and url.full don't contain credentials" do
+    test "url.full don't contain credentials" do
       Telepoison.get!("http://user:pass@localhost:8000/user/edit/24")
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"http.url", "http://localhost:8000/user/edit/24"})
       assert confirm_attributes(attributes, {"url.full", "http://localhost:8000/user/edit/24"})
     end
   end

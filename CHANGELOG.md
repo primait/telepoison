@@ -3,9 +3,17 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Changed
+
+- The following deprecated and reduntant attributes have been removed
+  - "http.method"
+  - "http.url"
+  - "net_peer_name"
 
 ---
 
@@ -25,7 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `Telepoison.setup/1` deprecation using @deprecated annotation instead of a warning log.
+- `Telepoison.setup/1` deprecation using @deprecated annotation instead of a
+  warning log.
 
 ---
 
@@ -38,8 +47,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- configuration options are correctly validated during `setup` instead of upon retrieval
-- request options (e.g. `:ot_resource_route` and `:ot_attributes`) can be correctly passed together to Telepoison calls (e.g. `get`)
+- configuration options are correctly validated during `setup` instead of upon
+  retrieval
+- request options (e.g. `:ot_resource_route` and `:ot_attributes`) can be
+  correctly passed together to Telepoison calls (e.g. `get`)
 - non valid `:ot_attributes` are ignored instead of being mapped to `nil`
 - usages of `:infer_fn` are now all `:infer_route`, which is the correct option
 
@@ -49,8 +60,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Trace propagation breaking if one of the header keys was an atom instead of string.
-  Note that this also causes HTTPoison.Response{request: %{headers}} to always use string for header keys.
+- Trace propagation breaking if one of the header keys was an atom instead of
+  string. Note that this also causes HTTPoison.Response{request: %{headers}} to
+  always use string for header keys.
 
 ---
 
@@ -66,13 +78,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- New `:ot_attributes` option to set default Open Telemetry metadata attributes to be added to each Telepoison request
-- New otel semantic conventions library to ensure proper conventions are followed
+- New `:ot_attributes` option to set default Open Telemetry metadata attributes
+  to be added to each Telepoison request
+- New otel semantic conventions library to ensure proper conventions are
+  followed
 
 ### Changed
 
 - Span name contains `method` only now, as per semantic conventions
-- `http.url` will be stripped of credentials. (eg. if the url is `"https://username:password@www.example.com/"` the attribute's value will be `"https://www.example.com/"`)
+- `http.url` will be stripped of credentials. (eg. if the url is
+  `"https://username:password@www.example.com/"` the attribute's value will be
+  `"https://www.example.com/"`)
 
 ---
 
@@ -82,9 +98,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - New `"net.peer.name"` attribute
 - HTTPoison 2.0.0 is now supported
-
-
-
 
 [Unreleased]: https://github.com/primait/telepoison/compare/1.3.2...HEAD
 [1.3.2]: https://github.com/primait/telepoison/compare/1.3.1-rc.1...1.3.2
