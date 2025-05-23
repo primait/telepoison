@@ -174,7 +174,7 @@ through HTTP "jumps".
   In this case, your only option to correctly propagate the trace context is to manually pass around the parent
   span, and pass it to Telepoison when doing the HTTP client request.
 
-* If the request fails due to nxdomain, the `process_response_status_code` hook is not called and therefore
+* If the request fails due to nxdomain, the `process_response` callback is not called and therefore
   the span is not ended.
 
 ## What's missing
