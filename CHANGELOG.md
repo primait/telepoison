@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- New option `ot_span_decorator`
+  - A function with arity 1 that will be called with the `HTTPoison.Response` and can be used to add attributes to the span
+
 ---
 
 ## [2.0.0] - 2024-10-10
