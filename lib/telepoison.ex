@@ -219,8 +219,6 @@ defmodule Telepoison do
     response
   end
 
-  def process_response_status_code(status_code), do: status_code
-
   defp end_span do
     Tracer.end_span()
     restore_parent_ctx()
