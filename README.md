@@ -50,6 +50,7 @@ the `Keyword list` `opts` parameter (or the `t:HTTPoison.Request/0` `Keyword lis
 * `:ot_span_name` - sets the span name.
 * `:ot_attributes` - a list of `{name, value}` `tuple` attributes that will be added to the span.
 * `:ot_resource_route` - sets the `http.route` attribute, depending on the value provided.
+* `:ot_span_decorator` - a function with arity 1 that will be called with the `HTTPoison.Response` and can be used to add attributes to the span.
 
 If the value is a string or an function with an arity of 1 (the `t:HTTPoison.Request/0` `request`) that is used to set the attribute
 
@@ -173,7 +174,7 @@ through HTTP "jumps".
   In this case, your only option to correctly propagate the trace context is to manually pass around the parent
   span, and pass it to Telepoison when doing the HTTP client request.
 
-* If the request fails due to nxdomain, the `process_response_status_code` hook is not called and therefore
+* If the request fails due to nxdomain, the `process_response` callback is not called and therefore
   the span is not ended.
 
 ## What's missing
