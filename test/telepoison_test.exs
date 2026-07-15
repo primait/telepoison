@@ -292,6 +292,37 @@ defmodule TelepoisonTest do
     assert confirm_attributes(attributes, {"some_attribute", "some value"})
   end
 
+  describe "span decorator" do
+    test "ot_span_decorator is called with the response" do
+      test_pid = self()
+
+      decorator_fn = fn response ->
+        send(test_pid, {:decorator_called, response})
+        OpenTelemetry.Tracer.set_attribute("decorated", true)
+      end
+
+      Telepoison.get!("http://localhost:8000", [], ot_span_decorator: decorator_fn)
+
+      assert_receive {:decorator_called, %HTTPoison.Response{}}
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      assert confirm_attributes(attributes, {"decorated", true})
+    end
+
+    test "ot_span_decorator errors are caught and logged" do
+      decorator_fn = fn _response ->
+        raise "decorator error"
+      end
+
+      log =
+        ExUnit.CaptureLog.capture_log(fn ->
+          Telepoison.get!("http://localhost:8000", [], ot_span_decorator: decorator_fn)
+        end)
+
+      assert log =~ "Error executing ot_span_decorator"
+      assert log =~ "decorator error"
+    end
+  end
+
   def flush_mailbox do
     receive do
       _ -> flush_mailbox()

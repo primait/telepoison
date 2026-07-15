@@ -197,15 +197,26 @@ defmodule Telepoison do
     result
   end
 
-  def process_response_status_code(status_code) do
+  def process_response(%HTTPoison.Response{status_code: status_code} = response) do
     # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
     if status_code >= 400 do
       Tracer.set_status(:error, "")
     end
 
     Tracer.set_attribute(@http_response_status_code, status_code)
+
+    # Execute span decorator if provided
+    if decorator_fn = get_in(response.request.options, [:ot_span_decorator]) do
+      try do
+        decorator_fn.(response)
+      rescue
+        e ->
+          Logger.warning("Error executing ot_span_decorator: #{inspect(e)}")
+      end
+    end
+
     end_span()
-    status_code
+    response
   end
 
   defp end_span do
