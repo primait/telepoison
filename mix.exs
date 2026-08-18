@@ -2,13 +2,13 @@ defmodule Telepoison.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/primait/telepoison"
-  @version "2.1.0"
+  @version "2.2.0"
 
   def project do
     [
       app: :telepoison,
       version: @version,
-      elixir: "~> 1.12",
+      elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
