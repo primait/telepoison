@@ -8,7 +8,7 @@ defmodule Telepoison.MixProject do
     [
       app: :telepoison,
       version: @version,
-      elixir: "~> 1.15",
+      elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -28,7 +28,7 @@ defmodule Telepoison.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:httpoison, "~> 1.6 or ~> 2.0"},
+      {:httpoison, "~> 1.6 or ~> 2.0 or ~> 3.0"},
       {:opentelemetry_api, "~> 1.0"},
       {:opentelemetry_semantic_conventions, "~> 1.27"},
     ] ++ dev_deps()

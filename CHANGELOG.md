@@ -14,7 +14,7 @@ and this project adheres to
 
 ### Breaking Changes
 
-- Elixir 1.15 or later is now required due to `:plug` 1.20
+- Elixir 1.17 or later and Erlang/OTP 27 or later are now required
 
 ---
 
@@ -120,7 +120,6 @@ and this project adheres to
 
 - New `"net.peer.name"` attribute
 - HTTPoison 2.0.0 is now supported
-
 
 [Unreleased]: https://github.com/primait/telepoison/compare/2.2.0...HEAD
 [2.2.0]: https://github.com/primait/telepoison/compare/2.1.0...2.2.0

@@ -8,6 +8,8 @@ defmodule Telepoison do
 
   use HTTPoison.Base
 
+  @dialyzer {:nowarn_function, stream_next: 1}
+
   require OpenTelemetry
   require OpenTelemetry.SemConv.HTTPAttributes, as: HTTPAttributes
   require OpenTelemetry.SemConv.URLAttributes, as: URLAttributes
