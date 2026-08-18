@@ -31,7 +31,7 @@ jobs:
       REASON: ${{ inputs.reason }}
       VERSION: ${{ inputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: erlef/setup-beam@v1
         with:
           otp-version: '24'
